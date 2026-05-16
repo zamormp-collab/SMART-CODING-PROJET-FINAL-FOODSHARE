@@ -1,0 +1,9 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-dark: #592925;
+  --color-brand-amber: #F18626;
+  /* Ambre du bouton */
+  --color-brand-input: #F29727;
+  /* Fond des champs */
+}

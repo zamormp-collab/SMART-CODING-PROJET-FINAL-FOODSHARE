@@ -1,11 +1,9 @@
 package com.example.foodshare.data.remote.dto
 
-import com.google.gson.annotations.SerializedName
-
-data class AuthResponse(
+data class RegisterResponse(
     val token: String,
-    @SerializedName("userId")
     val userId: String,
     val role: String,
     val message: String? = null
 )
+

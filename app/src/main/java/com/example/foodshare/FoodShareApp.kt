@@ -1,4 +1,4 @@
 package com.example.foodshare
 
-class FoodShareApp {
-}
+// FoodShareApp composable function is defined in MainActivity.kt
+

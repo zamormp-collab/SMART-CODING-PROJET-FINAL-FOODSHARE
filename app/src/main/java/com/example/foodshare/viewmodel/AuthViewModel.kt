@@ -5,11 +5,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.foodshare.domain.uscase.LoginUseCase
+import com.example.foodshare.data.remote.api.AuthApiService
+import com.example.foodshare.data.remote.dto.LoginRequest
 import kotlinx.coroutines.launch
 
 class AuthViewModel(
-    private val loginUseCase: LoginUseCase
+    private val authApiService: AuthApiService
 ) : ViewModel() {
 
     var uiState by mutableStateOf<LoginState>(LoginState.Idle)
@@ -19,12 +20,17 @@ class AuthViewModel(
         viewModelScope.launch {
             uiState = LoginState.Loading
 
-            val result = loginUseCase(email, password)
+            try {
+                val request = LoginRequest(email = email, password = password)
+                val response = authApiService.login(request)
 
-            uiState = if (result.isSuccess) {
-                LoginState.Success
-            } else {
-                LoginState.Error(result.exceptionOrNull()?.message ?: "Error")
+                uiState = if (response.isSuccessful) {
+                    LoginState.Success
+                } else {
+                    LoginState.Error(response.message() ?: "Login failed")
+                }
+            } catch (e: Exception) {
+                uiState = LoginState.Error(e.message ?: "An error occurred")
             }
         }
     }

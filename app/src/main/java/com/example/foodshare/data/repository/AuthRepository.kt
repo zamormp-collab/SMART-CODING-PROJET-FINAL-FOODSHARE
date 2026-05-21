@@ -3,13 +3,13 @@ package com.example.foodshare.data.repository
 import com.example.foodshare.data.local.SessionManager
 import com.example.foodshare.data.remote.api.AuthApiService
 import com.example.foodshare.data.remote.dto.LoginRequest
-import com.example.foodshare.data.remote.dto.LoginResponse
+import com.example.foodshare.data.remote.dto.AuthResponse
 
 class AuthRepository(
     private val api: AuthApiService,
     private val sessionManager: SessionManager
 ) {
-    suspend fun login(email: String, password: String): Result<LoginResponse> {
+    suspend fun login(email: String, password: String): Result<AuthResponse> {
         return try {
             val response = api.login(LoginRequest(email, password))
             if (response.isSuccessful) {

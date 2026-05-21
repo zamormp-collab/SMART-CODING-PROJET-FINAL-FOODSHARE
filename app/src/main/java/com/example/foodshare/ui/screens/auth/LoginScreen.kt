@@ -35,6 +35,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -139,6 +140,7 @@ fun LoginScreen(
                 onValueChange = { password = it },
                 label = { Text("Mot de passe") },
                 shape = RoundedCornerShape(16.dp),
+                visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -154,9 +156,18 @@ fun LoginScreen(
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFFE6A15A)
-                )
+                ),
+                enabled = state !is LoginState.Loading
             ) {
-                Text("LOGIN")
+                if (state is LoginState.Loading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = Color.White,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text("SE CONNECTER")
+                }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -165,17 +176,15 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
+            // Display error message if exists
             when (state) {
-                is LoginState.Loading -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.CenterHorizontally)
-                    )
-                }
-
                 is LoginState.Error -> {
                     Text(
                         text = state.message,
-                        color = Color.Red
+                        color = Color(0xFFFF6B6B),
+                        fontSize = 12.sp,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center
                     )
                 }
 

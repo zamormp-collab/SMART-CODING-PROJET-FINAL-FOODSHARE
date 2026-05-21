@@ -5,13 +5,17 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.rememberNavController
+import com.example.foodshare.data.remote.RetrofitClient
+import com.example.foodshare.ui.navigation.NavGraph
 import com.example.foodshare.ui.theme.FoodShareTheme
+import com.example.foodshare.viewmodel.AuthViewModel
+import com.example.foodshare.viewmodel.AuthViewModelFactory
+import com.example.foodshare.viewmodel.RegisterViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -19,29 +23,25 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             FoodShareTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+                FoodShareApp()
             }
         }
     }
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
+fun FoodShareApp() {
+    val navController = rememberNavController()
+    val factory = AuthViewModelFactory(RetrofitClient.authApiService)
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    FoodShareTheme {
-        Greeting("Android")
+    val authViewModel: AuthViewModel = viewModel(factory = factory)
+    val registerViewModel: RegisterViewModel = viewModel(factory = factory)
+
+    Scaffold(modifier = Modifier.fillMaxSize()) { _ ->
+        NavGraph(
+            navController = navController,
+            authViewModel = authViewModel,
+            registerViewModel = registerViewModel
+        )
     }
 }

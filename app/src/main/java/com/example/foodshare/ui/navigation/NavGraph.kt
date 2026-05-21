@@ -7,9 +7,14 @@ import androidx.navigation.compose.composable
 import com.example.foodshare.ui.screens.auth.LoginScreen
 import com.example.foodshare.ui.screens.auth.RegisterScreen
 import com.example.foodshare.viewmodel.AuthViewModel
+import com.example.foodshare.viewmodel.RegisterViewModel
 
 @Composable
-fun NavGraph(navController: NavHostController, authViewModel: AuthViewModel) {
+fun NavGraph(
+    navController: NavHostController,
+    authViewModel: AuthViewModel,
+    registerViewModel: RegisterViewModel
+) {
     NavHost(
         navController = navController,
         startDestination = Screen.Login.route
@@ -30,8 +35,9 @@ fun NavGraph(navController: NavHostController, authViewModel: AuthViewModel) {
 
         composable(Screen.Register.route) {
             RegisterScreen(
+                viewModel = registerViewModel,
                 onRegisterSuccess = {
-                    navController.navigate(Screen.Home.route) {
+                    navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.Register.route) { inclusive = true }
                     }
                 },

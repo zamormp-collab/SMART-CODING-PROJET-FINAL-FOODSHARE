@@ -5,7 +5,7 @@ const LoginForm: React.FC = () => {
         <form className="flex flex-col gap-4" onSubmit={(e) => e.preventDefault()}>
             <h2 className="text-brand-amber text-center font-bold text-xl uppercase mb-2">CONNEXION</h2>
 
-{/* email */}
+            {/* email */}
             <div className="flex flex-col gap-1">
                 <label className="text-gray-400 text-[10px] uppercase font-bold ml-1">EMAIL</label>
                 <input
@@ -15,13 +15,13 @@ const LoginForm: React.FC = () => {
                 />
             </div>
 
-{/* Password */}
+            {/* Password */}
             <div className="flex flex-col gap-1">
                 <label className="text-gray-400 text-[10px] uppercase font-bold ml-1">MOT DE PASSE</label>
                 <input
                     type="password"
                     placeholder=" "
-                   className="w-full border border-white/10 rounded-lg px-4 py-2 text-white outline-none focus:border-brand-amber transition-all"
+                    className="w-full border border-white/10 rounded-lg px-4 py-2 text-white outline-none focus:border-brand-amber transition-all"
                 />
             </div>
 

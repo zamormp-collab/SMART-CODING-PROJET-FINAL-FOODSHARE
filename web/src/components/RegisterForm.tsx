@@ -1,32 +1,65 @@
 import React, { useState, ChangeEvent, FormEvent } from 'react';
 
-// Définition des champs requis selon le modèle de données du sujet
+// Définition des champs requis pour le formulaire
 interface RegisterData {
     nom: string;
     prenom: string;
     email: string;
     motDePasse: string;
-
+    role: '';
+    address: string;
+    Telephone: string;
 }
 
+// Etat du formulaire 
 const RegisterForm: React.FC = () => {
     const [formData, setFormData] = useState<RegisterData>({
         nom: '',
         prenom: '',
         email: '',
         motDePasse: '',
+        role: '',
+        address: '',
+        Telephone: '',
     });
 
+    //Champs qui sert uniquement a la validation cote client
+    const [ConfirmPassword, setConfirmePassword] = useState('');
+
+    const [error, setError] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
+
+    //Gestionnaire de changement generique
     const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
+    //Soumission du formulaire d'inscription
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
-        // Logique d'appel vers l'API Spring Boot à venir
-        console.log("Données d'inscription :", formData);
+
+        //Validation du mot de passe
+        if (formData.motDePasse !== ConfirmPassword) {
+            setError('Les mots de passe ne correspondent pas.');
+            return;
+        }
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            // Logique d'appel vers l'API Spring Boot //
+            console.log("Données d'inscription :", formData);
+        } catch {
+            setError("Erreur lors de l'inscription. Cet email est peut deja utiliser.");
+        } finally {
+            setIsLoading(false)
+        }
     };
+
+    // Classes CSS communes aux inputs (évite la répétition)
+    const inputClass = "w-full border border-white/10 rounded-lg px-4 py-2 text-white outline-none focus:border-brand-amber transition-all bg-transparent";
+    const labelClass = "text-gray-400 text-[10px] uppercase font-bold ml-1";
 
     return (
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -43,22 +76,23 @@ const RegisterForm: React.FC = () => {
                     required
                     value={formData.nom}
                     onChange={handleChange}
-                     className="w-full border border-white/10 rounded-lg px-4 py-2 text-white outline-none focus:border-brand-amber transition-all"
+                    className={inputClass}
                 />
             </div>
 
-                  {/* prenom */}
+            {/* prenom */}
             <div className="flex flex-col gap-1">
                 <label className="text-gray-400 text-[10px] uppercase font-bold ml-1">Prenom</label>
                 <input
                     type="text"
                     name="prenom"
                     required
-                    value={formData.nom}
+                    value={formData.prenom}
                     onChange={handleChange}
-                     className="w-full border border-white/10 rounded-lg px-4 py-2 text-white outline-none focus:border-brand-amber transition-all"
+                    className={inputClass}
                 />
             </div>
+
 
             {/* Email */}
             <div className="flex flex-col gap-1">
@@ -69,12 +103,40 @@ const RegisterForm: React.FC = () => {
                     required
                     value={formData.email}
                     onChange={handleChange}
-                     className="w-full border border-white/10 rounded-lg px-4 py-2 text-white outline-none focus:border-brand-amber transition-all"
                     placeholder=" "
+                    className={inputClass}
                 />
             </div>
 
-           
+            {/* Telephone */}
+            <div className="flex flex-col gap-1">
+                <label className="text-gray-400 text-[10px] uppercase font-bold ml-1">Telephone</label>
+                <input
+                    type="tel"
+                    name="telephone"
+                    required
+                    value={formData.Telephone}
+                    onChange={handleChange}
+                    placeholder=" "
+                    className={inputClass}
+                />
+            </div>
+
+            {/* Adresse */}
+            <div className="flex flex-col gap-1">
+                <label className="text-gray-400 text-[10px] uppercase font-bold ml-1">Adresse</label>
+                <input
+                    type="text"
+                    name="address"
+                    required
+                    value={formData.address}
+                    onChange={handleChange}
+                    placeholder=" "
+                    className={inputClass}
+                />
+            </div>
+
+
             {/* Mot de Passe */}
             <div className="flex flex-col gap-1">
                 <label className="text-gray-400 text-[10px] uppercase font-bold ml-1">Mot de passe</label>
@@ -84,17 +146,39 @@ const RegisterForm: React.FC = () => {
                     required
                     value={formData.motDePasse}
                     onChange={handleChange}
-                     className="w-full border border-white/10 rounded-lg px-4 py-2 text-white outline-none focus:border-brand-amber transition-all"
                     placeholder=" "
+                    className={inputClass}
                 />
             </div>
 
+
+            {/* Role */}
+            <div className="flex flex-col gap-1">
+                <label className="text-gray-400 text-[10px] uppercase font-bold ml-1">Role</label>
+                <input
+                    type="role"
+                    name="role"
+                    required
+                    value={formData.role}
+                    onChange={handleChange}
+                    placeholder=" "
+                    className={inputClass}
+                />
+            </div>
+
+            {/* Message d'erreur */}
+            {error && (
+                <p className="text-red-400 text-xs text-center">{error}</p>
+            )}
+
+            {/*  Bouton soumission  */}
             <button
                 type="submit"
-                className="mt-4 bg-brand-amber hover:bg-amber-500 text-brand-dark font-bold py-3 rounded-lg uppercase tracking-tighter transition-transform active:scale-95"
-            >
-                Créer un compte
+                disabled={isLoading}
+                className="mt-4 bg-brand-amber hover:bg-amber-500 text-brand-dark font-bold py-3 rounded-lg uppercase tracking-tighter transition-transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed" >
+                {isLoading ? 'Création en cours...' : 'Créer un compte'}
             </button>
+
         </form>
     );
 };

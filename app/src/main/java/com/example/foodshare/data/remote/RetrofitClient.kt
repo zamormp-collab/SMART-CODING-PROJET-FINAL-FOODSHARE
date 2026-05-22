@@ -8,7 +8,7 @@ object RetrofitClient {
     // ⚠️ IMPORTANT: Choisir l'URL selon l'environnement
     // - Émulateur Android: "http://10.0.2.2:8080/"
     // - Device réel/Téléphone: "http://192.168.1.50:8080/"
-    private const val BASE_URL = "http://192.168.1.50:8080/"
+    private const val BASE_URL = "https://naturist-gab-discharge.ngrok-free.dev"
 
     private val retrofit by lazy {
         Retrofit.Builder()

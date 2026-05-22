@@ -6,6 +6,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.foodshare.ui.screens.auth.LoginScreen
 import com.example.foodshare.ui.screens.auth.RegisterScreen
+import com.example.foodshare.ui.screens.home.HomeScreen
 import com.example.foodshare.viewmodel.AuthViewModel
 import com.example.foodshare.viewmodel.RegisterViewModel
 
@@ -19,6 +20,10 @@ fun NavGraph(
         navController = navController,
         startDestination = Screen.Login.route
     ) {
+        // Ensure Home destination is registered before any navigate calls
+        composable(Screen.Home.route) {
+            HomeScreen()
+        }
         composable(Screen.Login.route) {
             LoginScreen(
                 viewModel = authViewModel,
@@ -46,5 +51,7 @@ fun NavGraph(
                 }
             )
         }
+
+        // Home is registered above
     }
 }

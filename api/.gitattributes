@@ -1,0 +1,17 @@
+# .gitattributes
+
+# Comportement par défaut
+* text=auto
+
+# Scripts Unix — toujours LF
+*.sh text eol=lf
+mvnw text eol=lf
+
+# Scripts Windows — toujours CRLF
+*.cmd text eol=crlf
+mvnw.cmd text eol=crlf
+
+# Fichiers binaires — pas de conversion
+*.jar binary
+*.png binary
+*.jpg binary

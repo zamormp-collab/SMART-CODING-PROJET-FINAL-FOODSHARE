@@ -48,7 +48,7 @@ fun NavGraph(
             RegisterScreen(
                 viewModel = registerViewModel,
                 onRegisterSuccess = {
-                    navController.navigate(Screen.Login.route) {
+                    navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.Register.route) { inclusive = true }
                     }
                 },

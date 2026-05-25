@@ -48,6 +48,8 @@ import com.example.foodshare.data.remote.dto.UserDto
 import com.example.foodshare.viewmodel.UserState
 import com.example.foodshare.viewmodel.UserViewModel
 import com.example.foodshare.viewmodel.UserViewModelFactory
+import androidx.compose.ui.tooling.preview.Preview
+import com.example.foodshare.ui.theme.FoodShareTheme
 
 private data class HomeOffer(
     val title: String,
@@ -199,6 +201,51 @@ fun HomeScreen() {
             }
 
             Spacer(modifier = Modifier.height(18.dp))
+        }
+    }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun HomeScreenPreview() {
+    FoodShareTheme {
+        Box(
+            modifier = androidx.compose.ui.Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(Color(0xFF5A3726), Color(0xFF1A120F))
+                    )
+                )
+        ) {
+            Column(modifier = androidx.compose.ui.Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp, vertical = 18.dp)
+            ) {
+                // Sample header
+                HomeTopHeader(user = com.example.foodshare.data.remote.dto.UserDto(id = "1", nom = "Patrick", prenom = "", email = "patrick@example.com", role = "Utilisateur", avatarUrl = null))
+
+                Spacer(modifier = androidx.compose.ui.Modifier.height(14.dp))
+                SearchBarLikeCard()
+                Spacer(modifier = androidx.compose.ui.Modifier.height(14.dp))
+                CategoryRow(categories = listOf("Burger","Pizza","Végétarien"))
+                Spacer(modifier = androidx.compose.ui.Modifier.height(18.dp))
+                SectionTitle(title = "Offers")
+                Spacer(modifier = androidx.compose.ui.Modifier.height(10.dp))
+
+                // two sample cards
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = androidx.compose.ui.Modifier.fillMaxWidth()) {
+                    FoodCard(modifier = androidx.compose.ui.Modifier.weight(1f), title = "Double Beef", description = "Burger maison", price = "12", icon = Icons.Default.ShoppingCart)
+                    FoodCard(modifier = androidx.compose.ui.Modifier.weight(1f), title = "Fish Fillet", description = "Poisson croustillant", price = "12", icon = Icons.Default.FavoriteBorder)
+                }
+
+                Spacer(modifier = androidx.compose.ui.Modifier.height(12.dp))
+                SectionTitle(title = "Reservations")
+                Spacer(modifier = androidx.compose.ui.Modifier.height(10.dp))
+                ReservationCard(serviceName = "Double Beef", reservationDate = "Aujourd'hui - 12:30", status = "Confirmée")
+                Spacer(modifier = androidx.compose.ui.Modifier.height(12.dp))
+            }
         }
     }
 }

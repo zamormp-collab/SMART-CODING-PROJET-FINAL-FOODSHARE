@@ -24,7 +24,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -34,31 +33,46 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import com.example.foodshare.ui.theme.BrownPrimary
-import com.example.foodshare.ui.theme.DarkBackground
-import com.example.foodshare.ui.theme.DarkSurface
-import com.example.foodshare.ui.theme.OrangeAccent
-import com.example.foodshare.ui.theme.WhiteText
-import com.example.foodshare.ui.theme.GrayText
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.foodshare.data.local.SessionManager
+import com.example.foodshare.data.remote.dto.OffreDto
+import com.example.foodshare.data.remote.dto.ReservationDto
 import com.example.foodshare.data.remote.dto.UserDto
+import com.example.foodshare.ui.theme.BrownPrimary
+import com.example.foodshare.ui.theme.DarkBackground
+import com.example.foodshare.ui.theme.DarkSurface
+import com.example.foodshare.ui.theme.FoodShareTheme
+import com.example.foodshare.ui.theme.GrayText
+import com.example.foodshare.ui.theme.OrangeAccent
+import com.example.foodshare.ui.theme.WhiteText
+import com.example.foodshare.viewmodel.HomeState
+import com.example.foodshare.viewmodel.HomeViewModel
+import com.example.foodshare.viewmodel.HomeViewModelFactory
 import com.example.foodshare.viewmodel.UserState
 import com.example.foodshare.viewmodel.UserViewModel
 import com.example.foodshare.viewmodel.UserViewModelFactory
-import androidx.compose.ui.tooling.preview.Preview
-import com.example.foodshare.ui.theme.FoodShareTheme
 
-import com.example.foodshare.data.remote.dto.OffreDto
-import com.example.foodshare.data.remote.dto.ReservationDto
+private data class HomeOfferCardUi(
+    val title: String,
+    val description: String,
+    val badge: String,
+    val icon: ImageVector
+)
+
+private data class HomeReservationCardUi(
+    val serviceName: String,
+    val reservationDate: String,
+    val status: String
+)
 
 @Composable
 fun HomeScreen() {
@@ -66,43 +80,37 @@ fun HomeScreen() {
     val sessionManager = remember(context) { SessionManager(context) }
     val factory: ViewModelProvider.Factory = remember(sessionManager) { UserViewModelFactory(sessionManager) }
     val userViewModel: UserViewModel = viewModel<UserViewModel>(factory = factory)
+    val homeFactory: ViewModelProvider.Factory = remember { HomeViewModelFactory() }
+    val homeViewModel: HomeViewModel = viewModel<HomeViewModel>(factory = homeFactory)
 
     val cachedUserState = remember { userViewModel.getCachedUser() }
-    val uiState = userViewModel.uiState
+    val userUiState = userViewModel.uiState
+    val homeUiState = homeViewModel.uiState
 
     LaunchedEffect(Unit) {
-        if (cachedUserState !is UserState.Success && uiState is UserState.Idle) {
+        if (cachedUserState !is UserState.Success && userUiState is UserState.Idle) {
             userViewModel.loadCurrentUser()
+        }
+        if (homeUiState is HomeState.Idle) {
+            homeViewModel.loadHomeData(
+                userId = (cachedUserState as? UserState.Success)?.user?.id
+                    ?: (userUiState as? UserState.Success)?.user?.id
+            )
         }
     }
 
     val user: UserDto? = when {
-        uiState is UserState.Success -> uiState.user
+        userUiState is UserState.Success -> userUiState.user
         cachedUserState is UserState.Success -> cachedUserState.user
         else -> null
     }
 
-    val loading = uiState is UserState.Loading
-    val errorMessage = (uiState as? UserState.Error)?.message
+    val loading = userUiState is UserState.Loading || homeUiState is HomeState.Loading
+    val errorMessage = (userUiState as? UserState.Error)?.message ?: (homeUiState as? HomeState.Error)?.message
 
     val categories = remember { listOf("Burger", "Pizza", "Végétarien") }
-    // Pour l'instant nous utilisons des données factices ici; plus tard les repositories appelleront l'API
-    val offers = remember {
-        listOf(
-            OffreDto(id = "1", title = "Double Beef", description = "Burger maison avec viande double et fromage fondant", quantity = 1, expirationDate = null, location = null, imageUrl = null, userId = null),
-            OffreDto(id = "2", title = "Single Beef", description = "Simple et savoureux, parfait pour une petite faim", quantity = 1, expirationDate = null, location = null, imageUrl = null, userId = null),
-            OffreDto(id = "3", title = "Fish Fillet", description = "Poisson croustillant avec sauce légère", quantity = 1, expirationDate = null, location = null, imageUrl = null, userId = null),
-            OffreDto(id = "4", title = "Chicken Crisp", description = "Poulet croustillant et pommes de terre", quantity = 1, expirationDate = null, location = null, imageUrl = null, userId = null)
-        )
-    }
-
-    val reservations = remember {
-        listOf(
-            ReservationDto(id = "r1", offreId = "1", offreTitre = "Double Beef", dateReservation = "Aujourd'hui - 12:30", statut = "Confirmée"),
-            ReservationDto(id = "r2", offreId = "4", offreTitre = "Chicken Crisp", dateReservation = "Demain - 18:00", statut = "En attente"),
-            ReservationDto(id = "r3", offreId = "3", offreTitre = "Fish Fillet", dateReservation = "27 Mai - 13:00", statut = "Récupérée")
-        )
-    }
+    val offers = (homeUiState as? HomeState.Success)?.offers.orEmpty()
+    val reservations = (homeUiState as? HomeState.Success)?.reservations.orEmpty()
 
     Box(
         modifier = Modifier
@@ -134,7 +142,7 @@ fun HomeScreen() {
 
             Spacer(modifier = Modifier.height(18.dp))
 
-                    SectionTitle(title = "Offres")
+            SectionTitle(title = "Offres")
 
             Spacer(modifier = Modifier.height(10.dp))
 
@@ -144,12 +152,13 @@ fun HomeScreen() {
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     row.forEach { offer ->
+                        val uiOffer = offer.toCardUi()
                         FoodCard(
                             modifier = Modifier.weight(1f),
-                            title = offer.title,
-                            description = offer.description,
-                            price = offer.price,
-                            icon = offer.icon
+                            title = uiOffer.title,
+                            description = uiOffer.description,
+                            badge = uiOffer.badge,
+                            icon = uiOffer.icon
                         )
                     }
                     if (row.size == 1) {
@@ -161,15 +170,16 @@ fun HomeScreen() {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-                    SectionTitle(title = "Réservations")
+            SectionTitle(title = "Réservations")
 
             Spacer(modifier = Modifier.height(10.dp))
 
             reservations.forEach { reservation ->
+                val uiReservation = reservation.toCardUi()
                 ReservationCard(
-                    serviceName = reservation.serviceName,
-                    reservationDate = reservation.reservationDate,
-                    status = reservation.status
+                    serviceName = uiReservation.serviceName,
+                    reservationDate = uiReservation.reservationDate,
+                    status = uiReservation.status
                 )
                 Spacer(modifier = Modifier.height(12.dp))
             }
@@ -208,7 +218,7 @@ fun HomeScreen() {
 fun HomeScreenPreview() {
     FoodShareTheme {
         Box(
-            modifier = androidx.compose.ui.Modifier
+            modifier = Modifier
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
@@ -216,36 +226,54 @@ fun HomeScreenPreview() {
                     )
                 )
         ) {
-            Column(modifier = androidx.compose.ui.Modifier
+            Column(modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp, vertical = 18.dp)
             ) {
-                // Sample header
-                HomeTopHeader(user = com.example.foodshare.data.remote.dto.UserDto(id = "1", nom = "Patrick", prenom = "", email = "patrick@example.com", role = "Utilisateur", avatarUrl = null))
+                HomeTopHeader(user = UserDto(id = "1", nom = "Patrick", prenom = "", email = "patrick@example.com", role = "Utilisateur", avatarUrl = null))
 
-                Spacer(modifier = androidx.compose.ui.Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(14.dp))
                 SearchBarLikeCard()
-                Spacer(modifier = androidx.compose.ui.Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(14.dp))
                 CategoryRow(categories = listOf("Burger","Pizza","Végétarien"))
-                Spacer(modifier = androidx.compose.ui.Modifier.height(18.dp))
-                SectionTitle(title = "Offers")
-                Spacer(modifier = androidx.compose.ui.Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(18.dp))
+                SectionTitle(title = "Offres")
+                Spacer(modifier = Modifier.height(10.dp))
 
-                // two sample cards
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = androidx.compose.ui.Modifier.fillMaxWidth()) {
-                    FoodCard(modifier = androidx.compose.ui.Modifier.weight(1f), title = "Double Beef", description = "Burger maison", price = "12", icon = Icons.Default.ShoppingCart)
-                    FoodCard(modifier = androidx.compose.ui.Modifier.weight(1f), title = "Fish Fillet", description = "Poisson croustillant", price = "12", icon = Icons.Default.FavoriteBorder)
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
+                    FoodCard(modifier = Modifier.weight(1f), title = "Double Beef", description = "Burger maison", badge = "1 portion", icon = Icons.Default.ShoppingCart)
+                    FoodCard(modifier = Modifier.weight(1f), title = "Fish Fillet", description = "Poisson croustillant", badge = "1 portion", icon = Icons.Default.FavoriteBorder)
                 }
 
-                Spacer(modifier = androidx.compose.ui.Modifier.height(12.dp))
-                SectionTitle(title = "Reservations")
-                Spacer(modifier = androidx.compose.ui.Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(12.dp))
+                SectionTitle(title = "Réservations")
+                Spacer(modifier = Modifier.height(10.dp))
                 ReservationCard(serviceName = "Double Beef", reservationDate = "Aujourd'hui - 12:30", status = "Confirmée")
-                Spacer(modifier = androidx.compose.ui.Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(12.dp))
             }
         }
     }
+}
+
+private fun OffreDto.toCardUi(): HomeOfferCardUi {
+    val titleText = title?.takeIf { it.isNotBlank() } ?: "Offre"
+    val descriptionText = description?.takeIf { it.isNotBlank() } ?: "Aucune description disponible"
+    val badgeText = quantity?.let { "$it portion(s)" } ?: "Disponible"
+    val icon = when (titleText.lowercase()) {
+        "fish fillet" -> Icons.Default.FavoriteBorder
+        "chicken crisp" -> Icons.Default.NotificationsNone
+        else -> Icons.Default.ShoppingCart
+    }
+    return HomeOfferCardUi(titleText, descriptionText, badgeText, icon)
+}
+
+private fun ReservationDto.toCardUi(): HomeReservationCardUi {
+    return HomeReservationCardUi(
+        serviceName = offreTitre?.takeIf { it.isNotBlank() } ?: "Réservation",
+        reservationDate = dateReservation?.takeIf { it.isNotBlank() } ?: "Date non renseignée",
+        status = statut?.takeIf { it.isNotBlank() } ?: "En attente"
+    )
 }
 
 @Composable
@@ -260,12 +288,12 @@ private fun HomeTopHeader(user: UserDto?) {
                 modifier = Modifier
                     .size(48.dp)
                     .clip(RoundedCornerShape(16.dp))
-                    .background(Color(0xFF6B4531)),
+                    .background(BrownPrimary),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = user?.nom?.firstOrNull()?.uppercase() ?: "F",
-                    color = Color.White,
+                    color = WhiteText,
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp
                 )
@@ -275,16 +303,16 @@ private fun HomeTopHeader(user: UserDto?) {
 
             Column {
                 Text(
-                    text = "Hello, ${user?.nom ?: "Faizah"}",
-                    color = Color.White,
+                    text = "Bienvenue ${user?.nom ?: "Utilisateur"}",
+                    color = WhiteText,
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
                     text = user?.role?.let {
                         "${it.lowercase().replaceFirstChar { c -> c.uppercase() }} • ${user.email}"
-                    } ?: "What do you want to eat today?",
-                    color = Color(0xFFD9D2CC),
+                    } ?: "Que souhaitez-vous manger aujourd'hui ?",
+                    color = GrayText,
                     fontSize = 13.sp
                 )
             }
@@ -293,7 +321,7 @@ private fun HomeTopHeader(user: UserDto?) {
         Icon(
             imageVector = Icons.Default.NotificationsNone,
             contentDescription = "Notifications",
-            tint = Color.White
+            tint = WhiteText
         )
     }
 }
@@ -365,7 +393,7 @@ private fun FoodCard(
     modifier: Modifier = Modifier,
     title: String,
     description: String,
-    price: String,
+    badge: String,
     icon: ImageVector
 ) {
     Card(
@@ -421,7 +449,7 @@ private fun FoodCard(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = "€ $price",
+                    text = badge,
                     fontSize = 14.sp,
                     color = WhiteText,
                     fontWeight = FontWeight.Bold

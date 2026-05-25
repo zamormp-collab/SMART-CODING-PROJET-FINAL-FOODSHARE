@@ -10,6 +10,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.navigation.NavHostController
+import com.example.foodshare.viewmodel.AuthViewModel
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -27,7 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun ProfileScreen(userViewModel: UserViewModel) {
+fun ProfileScreen(userViewModel: UserViewModel, authViewModel: AuthViewModel, navController: NavHostController) {
     var name by remember { mutableStateOf<String?>(null) }
     var email by remember { mutableStateOf<String?>(null) }
     var role by remember { mutableStateOf<String?>(null) }
@@ -170,7 +172,13 @@ fun ProfileScreen(userViewModel: UserViewModel) {
 
             // Logout Button
             Button(
-                onClick = { /* TODO: Logout */ },
+                onClick = {
+                    authViewModel.logout()
+                    // navigate back to Login and clear backstack
+                    navController.navigate(com.example.foodshare.ui.navigation.Screen.Login.route) {
+                        popUpTo(com.example.foodshare.ui.navigation.Screen.Home.route) { inclusive = true }
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),

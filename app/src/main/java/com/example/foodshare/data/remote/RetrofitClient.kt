@@ -8,22 +8,9 @@ import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
-    // Determine debug via reflection to avoid hard dependency on generated BuildConfig during static analysis
-    private val IS_DEBUG: Boolean = try {
-        val cls = Class.forName("com.example.foodshare.BuildConfig")
-        val field = cls.getField("DEBUG")
-        field.getBoolean(null)
-    } catch (e: Exception) {
-        // If BuildConfig isn't available (static checks), assume debug to favor local development
-        true
-    }
-
-    // Use a sensible default depending on build type. For emulator use 10.0.2.2
-    private val BASE_URL: String = if (IS_DEBUG) {
-        "http://10.0.2.2:8080/"
-    } else {
-        "https://your.production.api/"
-    }
+    // FORCE local LAN base URL as requested (for device testing).
+    // If you prefer emulator (10.0.2.2) or ngrok, change this value accordingly.
+    private const val BASE_URL: String = "http://192.168.1.50:8080/"
 
     private val retrofit by lazy {
         Retrofit.Builder()

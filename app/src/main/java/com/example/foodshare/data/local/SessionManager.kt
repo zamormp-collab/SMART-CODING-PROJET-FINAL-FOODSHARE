@@ -2,19 +2,37 @@ package com.example.foodshare.data.local
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKey
 import com.google.gson.Gson
 
 /**
- * SessionManager stores session-related values. For now this uses regular SharedPreferences
- * to remain buildable in all environments. For production, replace this with
- * EncryptedSharedPreferences or an encrypted DataStore implementation.
+ * SessionManager uses EncryptedSharedPreferences when available to securely store token and user info.
  */
 class SessionManager(context: Context) {
 
-    private val prefs: SharedPreferences =
-        context.getSharedPreferences("foodshare_prefs", Context.MODE_PRIVATE)
+    private val prefs: SharedPreferences
 
     private val gson = Gson()
+
+    init {
+        prefs = try {
+            val masterKey = MasterKey.Builder(context)
+                .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                .build()
+
+            EncryptedSharedPreferences.create(
+                context,
+                "foodshare_secure_prefs",
+                masterKey,
+                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            )
+        } catch (e: Exception) {
+            // Fallback to plain SharedPreferences if security library unavailable
+            context.getSharedPreferences("foodshare_prefs", Context.MODE_PRIVATE)
+        }
+    }
 
     fun saveToken(token: String) {
         prefs.edit().putString(KEY_TOKEN, token).apply()

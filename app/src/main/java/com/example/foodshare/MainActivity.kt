@@ -55,7 +55,7 @@ fun FoodShareApp() {
     androidx.compose.runtime.LaunchedEffect(currentRoute) {
         currentRoute?.let {
             // Don't save auth screens as last screen
-            if (it != com.example.foodshare.ui.navigation.Screen.Login.route && it != com.example.foodshare.ui.navigation.Screen.Register.route) {
+            if (it != Screen.Login.route && it != Screen.Register.route) {
                 sessionManager.saveLastScreen(it)
             }
         }
@@ -73,7 +73,7 @@ fun FoodShareApp() {
         }
     ) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding)) {
-            NavGraph(navController, authViewModel, registerViewModel, sessionManager)
+            NavGraph(navController, authViewModel, registerViewModel)
         }
     }
 }

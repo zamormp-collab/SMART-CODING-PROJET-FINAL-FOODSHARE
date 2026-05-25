@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit
 object RetrofitClient {
     // FORCE local LAN base URL as requested (for device testing).
     // If you prefer emulator (10.0.2.2) or ngrok, change this value accordingly.
-    private const val BASE_URL: String = "http://192.168.1.50:8080/"
+    private const val BASE_URL: String = " https://naturist-gab-discharge.ngrok-free.dev"
 
     private val retrofit by lazy {
         Retrofit.Builder()

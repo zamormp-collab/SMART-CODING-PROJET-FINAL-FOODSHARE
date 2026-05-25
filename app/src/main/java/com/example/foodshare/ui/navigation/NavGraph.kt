@@ -9,8 +9,6 @@ import com.example.foodshare.ui.screens.auth.RegisterScreen
 import com.example.foodshare.ui.screens.home.HomeScreen
 // Note: For now we only register the auth and home destinations.
 // Other screens (Offres, Reservation, Profile, Historique) will be added branch-by-branch later.
-// Note: For now we only register the auth and home destinations.
-// Other screens (Offres, Reservation, Profile, Historique) will be added branch-by-branch later.
 import com.example.foodshare.viewmodel.AuthViewModel
 import com.example.foodshare.viewmodel.RegisterViewModel
 import com.example.foodshare.viewmodel.LoginState
@@ -19,8 +17,7 @@ import com.example.foodshare.viewmodel.LoginState
 fun NavGraph(
     navController: NavHostController,
     authViewModel: AuthViewModel,
-    registerViewModel: RegisterViewModel,
-    sessionManager: SessionManager
+    registerViewModel: RegisterViewModel
 ) {
     val startDestination = if (authViewModel.uiState is LoginState.Success) Screen.Home.route else Screen.Login.route
 

@@ -7,10 +7,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.foodshare.data.remote.api.AuthApiService
 import com.example.foodshare.data.remote.dto.LoginRequest
+import com.example.foodshare.data.local.SessionManager
 import kotlinx.coroutines.launch
 
 class AuthViewModel(
-    private val authApiService: AuthApiService
+    private val authApiService: AuthApiService,
+    private val sessionManager: SessionManager
 ) : ViewModel() {
 
     var uiState by mutableStateOf<LoginState>(LoginState.Idle)
@@ -25,6 +27,11 @@ class AuthViewModel(
                 val response = authApiService.login(request)
 
                 uiState = if (response.isSuccessful) {
+                    // Save token if present in response body
+                    response.body()?.let {
+                        sessionManager.saveToken(it.token)
+                        // Optionally save user id or JSON later
+                    }
                     LoginState.Success
                 } else {
                     LoginState.Error(response.message() ?: "Login failed")
@@ -33,5 +40,18 @@ class AuthViewModel(
                 uiState = LoginState.Error(e.message ?: "An error occurred")
             }
         }
+    }
+
+    init {
+        // If a token exists in secure storage, consider the user authenticated for auto-login.
+        val existing = sessionManager.getToken()
+        if (!existing.isNullOrEmpty()) {
+            uiState = LoginState.Success
+        }
+    }
+
+    fun logout() {
+        sessionManager.clearSession()
+        uiState = LoginState.Idle
     }
 }

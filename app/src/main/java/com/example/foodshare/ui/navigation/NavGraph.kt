@@ -7,23 +7,32 @@ import androidx.navigation.compose.composable
 import com.example.foodshare.ui.screens.auth.LoginScreen
 import com.example.foodshare.ui.screens.auth.RegisterScreen
 import com.example.foodshare.ui.screens.home.HomeScreen
+// Note: For now we only register the auth and home destinations.
+// Other screens (Offres, Reservation, Profile, Historique) will be added branch-by-branch later.
+// Note: For now we only register the auth and home destinations.
+// Other screens (Offres, Reservation, Profile, Historique) will be added branch-by-branch later.
 import com.example.foodshare.viewmodel.AuthViewModel
 import com.example.foodshare.viewmodel.RegisterViewModel
+import com.example.foodshare.viewmodel.LoginState
 
 @Composable
 fun NavGraph(
     navController: NavHostController,
     authViewModel: AuthViewModel,
-    registerViewModel: RegisterViewModel
+    registerViewModel: RegisterViewModel,
+    sessionManager: SessionManager
 ) {
+    val startDestination = if (authViewModel.uiState is LoginState.Success) Screen.Home.route else Screen.Login.route
+
     NavHost(
         navController = navController,
-        startDestination = Screen.Login.route
+        startDestination = startDestination
     ) {
         // Ensure Home destination is registered before any navigate calls
         composable(Screen.Home.route) {
             HomeScreen()
         }
+
         composable(Screen.Login.route) {
             LoginScreen(
                 viewModel = authViewModel,
@@ -52,6 +61,6 @@ fun NavGraph(
             )
         }
 
-        // Home is registered above
+        // Note: keeping NavGraph intentionally minimal for now
     }
 }

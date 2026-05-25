@@ -1,5 +1,8 @@
 package com.example.foodshare.viewmodel
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.foodshare.data.local.SessionManager
@@ -8,7 +11,7 @@ import kotlinx.coroutines.launch
 
 class UserViewModel(private val repository: UserRepository, private val sessionManager: SessionManager) : ViewModel() {
 
-    var uiState: UserState = UserState.Idle
+    var uiState by mutableStateOf<UserState>(UserState.Idle)
         private set
 
     fun loadCurrentUser() {

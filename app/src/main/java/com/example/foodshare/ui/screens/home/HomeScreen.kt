@@ -42,6 +42,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.ViewModelProvider
 import com.example.foodshare.data.local.SessionManager
 import com.example.foodshare.data.remote.dto.UserDto
 import com.example.foodshare.viewmodel.UserState
@@ -65,8 +66,8 @@ private data class HomeReservation(
 fun HomeScreen() {
     val context = LocalContext.current
     val sessionManager = remember(context) { SessionManager(context) }
-    val factory = remember(sessionManager) { UserViewModelFactory(sessionManager) }
-    val userViewModel: UserViewModel = viewModel(factory = factory)
+    val factory: ViewModelProvider.Factory = remember(sessionManager) { UserViewModelFactory(sessionManager) }
+    val userViewModel: UserViewModel = viewModel<UserViewModel>(factory = factory)
 
     val cachedUserState = remember { userViewModel.getCachedUser() }
     val uiState = userViewModel.uiState

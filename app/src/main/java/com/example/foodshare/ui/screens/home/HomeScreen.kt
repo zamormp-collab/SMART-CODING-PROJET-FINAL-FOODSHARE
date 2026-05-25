@@ -57,18 +57,8 @@ import com.example.foodshare.viewmodel.UserViewModelFactory
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.foodshare.ui.theme.FoodShareTheme
 
-private data class HomeOffer(
-    val title: String,
-    val description: String,
-    val price: String,
-    val icon: ImageVector
-)
-
-private data class HomeReservation(
-    val serviceName: String,
-    val reservationDate: String,
-    val status: String
-)
+import com.example.foodshare.data.remote.dto.OffreDto
+import com.example.foodshare.data.remote.dto.ReservationDto
 
 @Composable
 fun HomeScreen() {
@@ -96,19 +86,21 @@ fun HomeScreen() {
     val errorMessage = (uiState as? UserState.Error)?.message
 
     val categories = remember { listOf("Burger", "Pizza", "Végétarien") }
+    // Pour l'instant nous utilisons des données factices ici; plus tard les repositories appelleront l'API
     val offers = remember {
         listOf(
-            HomeOffer("Double Beef", "Burger maison avec viande double et fromage fondant", "12", Icons.Default.ShoppingCart),
-            HomeOffer("Single Beef", "Simple et savoureux, parfait pour une petite faim", "9", Icons.Default.ShoppingCart),
-            HomeOffer("Fish Fillet", "Poisson croustillant avec sauce légère", "12", Icons.Default.FavoriteBorder),
-            HomeOffer("Chicken Crisp", "Poulet croustillant et pommes de terre", "12", Icons.Default.NotificationsNone)
+            OffreDto(id = "1", title = "Double Beef", description = "Burger maison avec viande double et fromage fondant", quantity = 1, expirationDate = null, location = null, imageUrl = null, userId = null),
+            OffreDto(id = "2", title = "Single Beef", description = "Simple et savoureux, parfait pour une petite faim", quantity = 1, expirationDate = null, location = null, imageUrl = null, userId = null),
+            OffreDto(id = "3", title = "Fish Fillet", description = "Poisson croustillant avec sauce légère", quantity = 1, expirationDate = null, location = null, imageUrl = null, userId = null),
+            OffreDto(id = "4", title = "Chicken Crisp", description = "Poulet croustillant et pommes de terre", quantity = 1, expirationDate = null, location = null, imageUrl = null, userId = null)
         )
     }
+
     val reservations = remember {
         listOf(
-            HomeReservation("Double Beef", "Aujourd'hui - 12:30", "Confirmée"),
-            HomeReservation("Chicken Crisp", "Demain - 18:00", "En attente"),
-            HomeReservation("Fish Fillet", "27 Mai - 13:00", "Récupérée")
+            ReservationDto(id = "r1", offreId = "1", offreTitre = "Double Beef", dateReservation = "Aujourd'hui - 12:30", statut = "Confirmée"),
+            ReservationDto(id = "r2", offreId = "4", offreTitre = "Chicken Crisp", dateReservation = "Demain - 18:00", statut = "En attente"),
+            ReservationDto(id = "r3", offreId = "3", offreTitre = "Fish Fillet", dateReservation = "27 Mai - 13:00", statut = "Récupérée")
         )
     }
 

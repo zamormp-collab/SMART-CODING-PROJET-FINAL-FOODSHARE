@@ -9,6 +9,8 @@ import androidx.compose.ui.unit.dp
 import com.example.foodshare.ui.navigation.BottomNavBar
 import com.example.foodshare.ui.theme.DarkBackground
 import com.example.foodshare.ui.theme.WhiteText
+import androidx.compose.ui.tooling.preview.Preview
+import com.example.foodshare.ui.theme.FoodShareTheme
 
 @Composable
 fun HomeScreen() {
@@ -38,5 +40,13 @@ fun HomeScreen() {
                 }
             }
         }
+    }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun HomeScreenPreview() {
+    FoodShareTheme {
+        HomeScreen()
     }
 }

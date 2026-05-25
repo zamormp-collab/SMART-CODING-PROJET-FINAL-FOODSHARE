@@ -34,6 +34,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import com.example.foodshare.ui.theme.BrownPrimary
+import com.example.foodshare.ui.theme.DarkBackground
+import com.example.foodshare.ui.theme.DarkSurface
+import com.example.foodshare.ui.theme.OrangeAccent
+import com.example.foodshare.ui.theme.WhiteText
+import com.example.foodshare.ui.theme.GrayText
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontStyle
@@ -112,8 +118,8 @@ fun HomeScreen() {
             .background(
                 Brush.verticalGradient(
                     colors = listOf(
-                        Color(0xFF5A3726),
-                        Color(0xFF1A120F)
+                        BrownPrimary,
+                        DarkBackground
                     )
                 )
             )
@@ -136,7 +142,7 @@ fun HomeScreen() {
 
             Spacer(modifier = Modifier.height(18.dp))
 
-            SectionTitle(title = "Offers")
+                    SectionTitle(title = "Offres")
 
             Spacer(modifier = Modifier.height(10.dp))
 
@@ -163,7 +169,7 @@ fun HomeScreen() {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            SectionTitle(title = "Reservations")
+                    SectionTitle(title = "Réservations")
 
             Spacer(modifier = Modifier.height(10.dp))
 
@@ -315,15 +321,15 @@ private fun SearchBarLikeCard() {
         ) {
             Icon(
                 imageVector = Icons.Default.Search,
-                contentDescription = "Search",
-                tint = Color(0xFF9E9E9E)
+                contentDescription = "Rechercher",
+                tint = GrayText
             )
 
             Spacer(modifier = Modifier.width(10.dp))
 
             Text(
-                text = "Search for food",
-                color = Color(0xFF9E9E9E),
+                text = "Rechercher des plats",
+                color = GrayText,
                 fontSize = 14.sp
             )
         }
@@ -338,12 +344,12 @@ private fun CategoryRow(categories: List<String>) {
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(20.dp))
-                    .background(if (selected) Color(0xFFE67E22) else Color.White)
+                    .background(if (selected) OrangeAccent else Color.White)
                     .padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
                 Text(
                     text = category,
-                    color = if (selected) Color.White else Color(0xFF333333),
+                    color = if (selected) WhiteText else Color(0xFF333333),
                     fontSize = 13.sp,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -356,7 +362,7 @@ private fun CategoryRow(categories: List<String>) {
 private fun SectionTitle(title: String) {
     Text(
         text = title,
-        color = Color.White,
+        color = WhiteText,
         fontSize = 20.sp,
         fontWeight = FontWeight.Bold
     )
@@ -373,7 +379,7 @@ private fun FoodCard(
     Card(
         modifier = modifier.height(190.dp),
         shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF111111))
+        colors = CardDefaults.cardColors(containerColor = DarkSurface)
     ) {
         Column(
             modifier = Modifier
@@ -386,13 +392,13 @@ private fun FoodCard(
                     modifier = Modifier
                         .size(82.dp)
                         .clip(RoundedCornerShape(20.dp))
-                        .background(Color(0xFF20140F)),
+                        .background(DarkSurface),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = icon,
                         contentDescription = title,
-                        tint = Color(0xFFE6A15A),
+                        tint = OrangeAccent,
                         modifier = Modifier.size(36.dp)
                     )
                 }
@@ -403,7 +409,7 @@ private fun FoodCard(
                     text = title,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    color = WhiteText
                 )
 
                 Spacer(modifier = Modifier.height(3.dp))
@@ -411,7 +417,7 @@ private fun FoodCard(
                 Text(
                     text = description,
                     fontSize = 11.sp,
-                    color = Color(0xFFBDBDBD),
+                    color = GrayText,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -425,7 +431,7 @@ private fun FoodCard(
                 Text(
                     text = "€ $price",
                     fontSize = 14.sp,
-                    color = Color.White,
+                    color = WhiteText,
                     fontWeight = FontWeight.Bold
                 )
 
@@ -433,7 +439,7 @@ private fun FoodCard(
                     modifier = Modifier
                         .size(28.dp)
                         .clip(RoundedCornerShape(50))
-                        .background(Color(0xFFE6A15A)),
+                        .background(OrangeAccent),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(text = "+", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
@@ -448,7 +454,7 @@ private fun ReservationCard(serviceName: String, reservationDate: String, status
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF2A1A13))
+        colors = CardDefaults.cardColors(containerColor = DarkSurface)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
@@ -459,14 +465,14 @@ private fun ReservationCard(serviceName: String, reservationDate: String, status
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = serviceName,
-                        color = Color.White,
+                        color = WhiteText,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = reservationDate,
-                        color = Color(0xFFDDCFC6),
+                        color = GrayText,
                         fontSize = 12.sp
                     )
                 }
@@ -485,7 +491,7 @@ private fun ReservationCard(serviceName: String, reservationDate: String, status
                 ) {
                     Text(
                         text = status,
-                        color = Color.White,
+                        color = WhiteText,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -501,14 +507,14 @@ private fun ReservationCard(serviceName: String, reservationDate: String, status
             ) {
                 Text(
                     text = "Réservation active",
-                    color = Color(0xFFDDCFC6),
+                    color = GrayText,
                     fontSize = 12.sp,
                     fontStyle = FontStyle.Italic
                 )
 
                 Text(
                     text = "Voir",
-                    color = Color(0xFFE6A15A),
+                    color = OrangeAccent,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold
                 )

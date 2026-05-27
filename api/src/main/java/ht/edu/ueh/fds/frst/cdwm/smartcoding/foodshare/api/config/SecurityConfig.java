@@ -1,5 +1,6 @@
 /**
  * Classe pour configurer Spring Security
+ * Mise à jour : ajout des routes /api/offres/** protégées par rôle
  */
 
 package ht.edu.ueh.fds.frst.cdwm.smartcoding.foodshare.api.config;
@@ -15,6 +16,8 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -24,6 +27,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.http.HttpMethod;
+
 
 import java.util.List;
 
@@ -68,23 +73,31 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable())
+                .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
+                        // Routes publiques — pas besoin de token
                         .requestMatchers(
                                 "/api/auth/**",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
                                 "/h2-console/**"
                         ).permitAll()
+                        // Routes de lecture des offres
+                        .requestMatchers(HttpMethod.GET, "/api/offres/mes-offres").hasRole("OFFREUR")
+                        // GET /api/offres — accessible à tous les utilisateurs connectés
+                        .requestMatchers(HttpMethod.GET, "/api/offres", "/api/offres/*").hasAnyRole("OFFREUR", "ETUDIANT")
+                        // Gestion des offres — réservé aux OFFREURs
+                        .requestMatchers("/api/offres/**").hasRole("OFFREUR")
+                        // Tout le reste nécessite une authentification
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
-                .authenticationProvider(authenticationProvider()) // To use our custom AuthenticationProvider
+                .authenticationProvider(authenticationProvider()) // Pour utiliser notre AuthenticationProvider personnalisé
                 .headers(headers -> headers
-                        .frameOptions(frame -> frame.disable()) // pour H2 console
+                        .frameOptions(HeadersConfigurer.FrameOptionsConfig::disable) // pour H2 console
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class); // Ajouter le filtre JWT avant le filtre d'authentification Spring
 

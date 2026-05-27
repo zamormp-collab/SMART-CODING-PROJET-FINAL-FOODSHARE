@@ -1,5 +1,6 @@
 /**
  * Gestionnaire d'exception pour les exceptions globales de toute l'API.
+ * Mis à jour : ajout des handlers NotFoundException et AccesRefuseException
  */
 
 package ht.edu.ueh.fds.frst.cdwm.smartcoding.foodshare.api.exception;
@@ -17,10 +18,11 @@ import java.util.Map;
 
 @RestControllerAdvice // Annotation pour intercepter toutes les exceptions de l'API REST
 public class GlobalExceptionHandler {
-
-    @ExceptionHandler(MethodArgumentNotValidException.class) // Annotation pour intercepter les exceptions de VALIDATION_DTO
+    // ─── 400 — Validation @Valid échouée
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    // Annotation pour intercepter les exceptions de VALIDATION_DTO
     public ResponseEntity<Map<String, Object>>
-    handleValidationExceptions(
+    handleMethodArgumentNotValid(
             MethodArgumentNotValidException ex) {
 
         Map<String, String> errors = new HashMap<>();
@@ -53,12 +55,11 @@ public class GlobalExceptionHandler {
                 .body(response);
     }
 
-
     @ExceptionHandler( // Annotation pour intercepter les exceptions d'exécution d'EMAIL_DEJA_UTILISE
             EmailDejaUtiliseException.class
     )
     public ResponseEntity<Map<String, Object>>
-    handleEmailDejaUtiliseException(
+    handleEmailDejaUtilise(
             EmailDejaUtiliseException ex) {
 
         Map<String, Object> response =
@@ -82,7 +83,7 @@ public class GlobalExceptionHandler {
             IdentifiantsInvalidesException.class
     )
     public ResponseEntity<Map<String, Object>>
-    handleIdentifiantsInvalidesException(
+    handleIdentifiantsInvalides(
             IdentifiantsInvalidesException ex) {
 
         Map<String, Object> response =
@@ -101,5 +102,59 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.UNAUTHORIZED)
                 .body(response);
     }
-}
 
+    // Code HTTP = 400 — Erreur métier (créneau invalide, offre non modifiable…)
+    @ExceptionHandler(CreneauInvalideException.class)
+    public ResponseEntity<Map<String, Object>> handleCreneauInvalide(
+            CreneauInvalideException ex) {
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("timestamp", LocalDateTime.now());
+        response.put("status", HttpStatus.BAD_REQUEST.value());
+        response.put("message", ex.getMessage());
+
+        return ResponseEntity.badRequest().body(response);
+    }
+
+    // ─── 403 — Accès refusé (mauvais propriétaire) ────────────────────────────
+    @ExceptionHandler(AccesRefuseException.class)
+    public ResponseEntity<Map<String, Object>> handleAccesRefuse(
+            AccesRefuseException ex) {
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("timestamp", LocalDateTime.now());
+        response.put("status", HttpStatus.FORBIDDEN.value());
+        response.put("message", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+    }
+
+    // ─── 404 — Ressource introuvable ──────────────────────────────────────────
+    @ExceptionHandler(RessourceIntrouvableException.class)
+    public ResponseEntity<Map<String, Object>> handleRessourceIntrouvable(
+            RessourceIntrouvableException ex) {
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("timestamp", LocalDateTime.now());
+        response.put("status", HttpStatus.NOT_FOUND.value());
+        response.put("message", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
+    // 409 — opération impossible sur l'état actuel
+    @ExceptionHandler({
+            IllegalArgumentException.class,
+            OperationNonAutoriseeException.class
+    })
+    public ResponseEntity<Map<String, Object>> handleOperationImpossible(
+            RuntimeException ex) {
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("timestamp", LocalDateTime.now());
+        response.put("status", HttpStatus.CONFLICT.value());
+        response.put("message", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+    }
+}

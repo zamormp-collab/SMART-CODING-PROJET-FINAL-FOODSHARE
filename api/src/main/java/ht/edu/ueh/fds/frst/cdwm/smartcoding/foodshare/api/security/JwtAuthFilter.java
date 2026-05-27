@@ -37,9 +37,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         // 1. Lire l'en-tête d'autorisation
         String authHeader = request.getHeader("Authorization");
 
-        // Log temporaire — à supprimer après debug
-        System.out.println(">>> Requête reçue : " + request.getMethod() + " " + request.getRequestURI());
-
         // 2. Si pas de token → laisser passer (les routes publiques sont gérées par SecurityConfig)
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);

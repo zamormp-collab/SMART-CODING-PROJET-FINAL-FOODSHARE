@@ -80,7 +80,7 @@ fun HomeScreen() {
     val sessionManager = remember(context) { SessionManager(context) }
     val factory: ViewModelProvider.Factory = remember(sessionManager) { UserViewModelFactory(sessionManager) }
     val userViewModel: UserViewModel = viewModel<UserViewModel>(factory = factory)
-    val homeFactory: ViewModelProvider.Factory = remember { HomeViewModelFactory() }
+    val homeFactory: ViewModelProvider.Factory = remember(sessionManager) { HomeViewModelFactory(sessionManager) }
     val homeViewModel: HomeViewModel = viewModel<HomeViewModel>(factory = homeFactory)
 
     val cachedUserState = remember { userViewModel.getCachedUser() }

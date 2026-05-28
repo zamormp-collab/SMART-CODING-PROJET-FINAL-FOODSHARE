@@ -7,6 +7,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.foodshare.data.remote.api.AuthApiService
 import com.example.foodshare.data.remote.dto.RegisterRequest
+import com.example.foodshare.data.remote.dto.UserDto
+import com.google.gson.Gson
 import com.example.foodshare.data.local.SessionManager
 import kotlinx.coroutines.launch
 import android.util.Log
@@ -45,19 +47,31 @@ class RegisterViewModel(
 
                 val response = authApiService.register(request)
 
-<<<<<<< Updated upstream
-                uiState = if (response.isSuccessful) {
-                    // Save token if present in response body
-                    response.body()?.let {
-                        sessionManager.saveToken(it.token)
-                    }
-                    RegisterState.Success
-=======
                 if (response.isSuccessful) {
-                    response.body()?.token?.let(sessionManager::saveToken)
+                    // Sauvegarde du token si présent
+                    val body = response.body()
+                    body?.token?.let { token ->
+                        sessionManager.saveToken(token)
+                    }
+
+                    // Construire et sauvegarder un UserDto local à partir des valeurs saisies
+                    try {
+                        val userId = body?.userId ?: ""
+                        val user = UserDto(
+                            id = userId,
+                            nom = nom,
+                            prenom = prenom.ifBlank { null },
+                            email = email,
+                            role = role.ifBlank { "user" },
+                            avatarUrl = null
+                        )
+                        sessionManager.saveUserJson(Gson().toJson(user))
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Impossible de sauvegarder user JSON", e)
+                    }
+
                     uiState = RegisterState.Success
                     Log.d(TAG, "register success")
->>>>>>> Stashed changes
                 } else {
                     val err = response.message() ?: "Registration failed"
                     uiState = RegisterState.Error(err)

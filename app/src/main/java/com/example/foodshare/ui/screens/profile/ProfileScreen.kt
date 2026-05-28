@@ -2,12 +2,14 @@ package com.example.foodshare.ui.screens.profile
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -20,6 +22,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -60,27 +64,35 @@ fun ProfileScreen(
 				Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Retour", tint = WhiteText)
 			}
 			Spacer(modifier = Modifier.width(6.dp))
-			Text(text = "Mon profil", color = WhiteText, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+			Text(text = "Mon profil", color = WhiteText, fontSize = 24.sp, fontWeight = FontWeight.Bold)
 		}
 
-		Card(colors = CardDefaults.cardColors(containerColor = DarkSurface), shape = RoundedCornerShape(20.dp), modifier = Modifier.fillMaxWidth()) {
-			Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-				Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-					Card(shape = RoundedCornerShape(18.dp), colors = CardDefaults.cardColors(containerColor = OrangeAccent)) {
-						Icon(Icons.Default.Person, contentDescription = null, tint = WhiteText, modifier = Modifier.padding(16.dp))
+		Card(colors = CardDefaults.cardColors(containerColor = DarkSurface), shape = RoundedCornerShape(24.dp), modifier = Modifier.fillMaxWidth()) {
+			Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
+				Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+					Card(shape = RoundedCornerShape(22.dp), colors = CardDefaults.cardColors(containerColor = OrangeAccent)) {
+						Box(modifier = Modifier.size(68.dp), contentAlignment = Alignment.Center) {
+							Icon(Icons.Default.Person, contentDescription = null, tint = WhiteText)
+						}
 					}
-					Column {
-						Text(text = "Modifier votre profil", color = WhiteText, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-						Text(text = "Photo, nom, email et téléphone", color = WhiteText)
+					Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+						Text(text = nom, color = WhiteText, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+						Text(text = email, color = WhiteText)
+						Text(text = "Cliquez sur l'avatar pour changer votre photo", color = WhiteText, fontSize = 12.sp)
 					}
 				}
 
-				OutlinedTextField(value = nom, onValueChange = { nom = it }, label = { Text("Nom") }, modifier = Modifier.fillMaxWidth())
-				OutlinedTextField(value = email, onValueChange = { email = it }, label = { Text("Email") }, modifier = Modifier.fillMaxWidth())
-				OutlinedTextField(value = telephone, onValueChange = { telephone = it }, label = { Text("Téléphone") }, modifier = Modifier.fillMaxWidth())
+				Card(colors = CardDefaults.cardColors(containerColor = BrownPrimary), shape = RoundedCornerShape(20.dp), modifier = Modifier.fillMaxWidth()) {
+					Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+						Text(text = "Informations du compte", color = WhiteText, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+						OutlinedTextField(value = nom, onValueChange = { nom = it }, label = { Text("Nom complet") }, modifier = Modifier.fillMaxWidth())
+						OutlinedTextField(value = email, onValueChange = { email = it }, label = { Text("Adresse email") }, leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) }, modifier = Modifier.fillMaxWidth())
+						OutlinedTextField(value = telephone, onValueChange = { telephone = it }, label = { Text("Téléphone") }, leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null) }, modifier = Modifier.fillMaxWidth())
+					}
+				}
 
 				Button(onClick = { /* save later */ }, colors = ButtonDefaults.buttonColors(containerColor = OrangeAccent), modifier = Modifier.fillMaxWidth()) {
-					Text(text = "ENREGISTRER")
+					Text(text = "ENREGISTRER LES MODIFICATIONS")
 				}
 			}
 		}

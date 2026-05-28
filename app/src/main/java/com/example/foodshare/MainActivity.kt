@@ -11,10 +11,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.foodshare.data.local.SessionManager
 import com.example.foodshare.data.remote.RetrofitClient
+import com.example.foodshare.ui.navigation.BottomNavBar
 import com.example.foodshare.ui.navigation.NavGraph
+import com.example.foodshare.ui.navigation.Screen
 import com.example.foodshare.ui.theme.FoodShareTheme
 import com.example.foodshare.viewmodel.AuthViewModel
 import com.example.foodshare.viewmodel.AuthViewModelFactory
@@ -38,11 +41,30 @@ fun FoodShareApp() {
     val context = LocalContext.current
     val sessionManager = remember(context) { SessionManager(context) }
     val factory = AuthViewModelFactory(RetrofitClient.authApiService, sessionManager)
+    val navBackStackEntry = navController.currentBackStackEntryAsState().value
+    val currentRoute = navBackStackEntry?.destination?.route
+    val showBottomBar = currentRoute == Screen.Home.route || currentRoute == Screen.Reservation.route
 
     val authViewModel: AuthViewModel = viewModel(factory = factory)
     val registerViewModel: RegisterViewModel = viewModel(factory = factory)
 
-    Scaffold(modifier = Modifier.fillMaxSize()) { _ ->
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        bottomBar = {
+            if (showBottomBar) {
+                BottomNavBar(
+                    currentRoute = currentRoute,
+                    onNavigate = { route ->
+                        navController.navigate(route) {
+                            launchSingleTop = true
+                            restoreState = true
+                            popUpTo(Screen.Home.route) { saveState = true }
+                        }
+                    }
+                )
+            }
+        }
+    ) { _ ->
         NavGraph(
             navController = navController,
             authViewModel = authViewModel,

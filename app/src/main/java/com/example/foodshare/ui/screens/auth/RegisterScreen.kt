@@ -25,7 +25,12 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -59,12 +64,13 @@ fun RegisterScreen(
     var adresse by remember { mutableStateOf("") }
     var telephone by remember { mutableStateOf("") }
 
-    // Observe ViewModel state
-    val uiState by remember { derivedStateOf { viewModel?.uiState ?: RegisterState.Idle } }
+    // Observe ViewModel state directly so Compose reacts immediately to Success/Error
+    val uiState = viewModel?.uiState ?: RegisterState.Idle
 
     // Handle registration success
     LaunchedEffect(uiState) {
         if (uiState is RegisterState.Success) {
+            viewModel?.resetState()
             onRegisterSuccess()
         }
     }
@@ -209,7 +215,7 @@ fun RegisterScreen(
             // Display error message if exists
             if (uiState is RegisterState.Error) {
                 Text(
-                    text = (uiState as RegisterState.Error).message,
+                    text = uiState.message,
                     color = Color(0xFFFF6B6B),
                     fontSize = 12.sp,
                     modifier = Modifier.fillMaxWidth(),

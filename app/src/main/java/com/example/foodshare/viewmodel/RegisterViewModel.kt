@@ -21,6 +21,10 @@ class RegisterViewModel(
     var uiState by mutableStateOf<RegisterState>(RegisterState.Idle)
         private set
 
+    fun resetState() {
+        uiState = RegisterState.Idle
+    }
+
     fun register(
         nom: String,
         prenom: String,

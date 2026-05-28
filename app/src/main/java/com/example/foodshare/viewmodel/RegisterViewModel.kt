@@ -9,6 +9,7 @@ import com.example.foodshare.data.remote.api.AuthApiService
 import com.example.foodshare.data.remote.dto.RegisterRequest
 import com.example.foodshare.data.local.SessionManager
 import kotlinx.coroutines.launch
+import android.util.Log
 
 class RegisterViewModel(
     private val authApiService: AuthApiService,
@@ -28,6 +29,7 @@ class RegisterViewModel(
         telephone: String
     ) {
         viewModelScope.launch {
+            Log.d(TAG, "register() called with email=$email, nom=$nom")
             uiState = RegisterState.Loading
 
             try {
@@ -43,19 +45,33 @@ class RegisterViewModel(
 
                 val response = authApiService.register(request)
 
+<<<<<<< Updated upstream
                 uiState = if (response.isSuccessful) {
                     // Save token if present in response body
                     response.body()?.let {
                         sessionManager.saveToken(it.token)
                     }
                     RegisterState.Success
+=======
+                if (response.isSuccessful) {
+                    response.body()?.token?.let(sessionManager::saveToken)
+                    uiState = RegisterState.Success
+                    Log.d(TAG, "register success")
+>>>>>>> Stashed changes
                 } else {
-                    RegisterState.Error(response.message() ?: "Registration failed")
+                    val err = response.message() ?: "Registration failed"
+                    uiState = RegisterState.Error(err)
+                    Log.w(TAG, "register failed: code=${response.code()} message=$err body=${response.errorBody()?.string()}")
                 }
             } catch (e: Exception) {
+                Log.e(TAG, "register exception", e)
                 uiState = RegisterState.Error(e.message ?: "An error occurred")
             }
         }
+    }
+
+    companion object {
+        private const val TAG = "RegisterViewModel"
     }
 }
 

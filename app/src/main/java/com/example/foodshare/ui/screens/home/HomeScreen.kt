@@ -101,10 +101,7 @@ fun HomeScreen(
             userViewModel.loadCurrentUser()
         }
         if (homeUiState is HomeState.Idle) {
-            homeViewModel.loadHomeData(
-                userId = (cachedUserState as? UserState.Success)?.user?.id
-                    ?: (userUiState as? UserState.Success)?.user?.id
-            )
+            homeViewModel.loadHomeData()
         }
     }
 
@@ -298,7 +295,7 @@ private fun HomeTopHeader(user: UserDto?, onProfileClick: () -> Unit) {
             Spacer(modifier = Modifier.width(12.dp))
 
             Column {
-                Text(text = "Bienvenue ${user?.nom ?: "Utilisateur"}", color = WhiteText, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                Text(text = "Bonjour ${user?.nom ?: "Utilisateur"}", color = WhiteText, fontSize = 24.sp, fontWeight = FontWeight.Bold)
                 Text(
                     text = user?.role?.let {
                         "${it.lowercase().replaceFirstChar { c -> c.uppercase() }} • ${user.email}"

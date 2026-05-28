@@ -130,8 +130,21 @@ fun LoginScreen(
                 onValueChange = { email = it },
                 label = { Text("Email") },
                 shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                isError = state is LoginState.EmailInvalid
             )
+
+            if (state is LoginState.EmailInvalid) {
+                Text(
+                    text = "Email invalide",
+                    color = Color(0xFFFF6B6B),
+                    fontSize = 12.sp,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 6.dp),
+                    textAlign = TextAlign.Start
+                )
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -141,8 +154,21 @@ fun LoginScreen(
                 label = { Text("Mot de passe") },
                 shape = RoundedCornerShape(16.dp),
                 visualTransformation = PasswordVisualTransformation(),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                isError = state is LoginState.PasswordInvalid
             )
+
+            if (state is LoginState.PasswordInvalid) {
+                Text(
+                    text = "Mot de passe invalide",
+                    color = Color(0xFFFF6B6B),
+                    fontSize = 12.sp,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 6.dp),
+                    textAlign = TextAlign.Start
+                )
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
 

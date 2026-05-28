@@ -9,6 +9,8 @@ import com.example.foodshare.data.local.SessionManager
 import com.example.foodshare.data.remote.api.AuthApiService
 import com.example.foodshare.data.remote.dto.LoginRequest
 import kotlinx.coroutines.launch
+import android.util.Patterns
+import okhttp3.ResponseBody
 
 class AuthViewModel(
     private val authApiService: AuthApiService,
@@ -22,15 +24,40 @@ class AuthViewModel(
         viewModelScope.launch {
             uiState = LoginState.Loading
 
+            // Client-side validation
+            if (email.isBlank() || !Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                uiState = LoginState.EmailInvalid
+                return@launch
+            }
+
+            if (password.isBlank()) {
+                uiState = LoginState.PasswordInvalid
+                return@launch
+            }
+
             try {
                 val request = LoginRequest(email = email, password = password)
                 val response = authApiService.login(request)
 
-                uiState = if (response.isSuccessful) {
+                if (response.isSuccessful) {
                     response.body()?.token?.let(sessionManager::saveToken)
-                    LoginState.Success
+                    uiState = LoginState.Success
                 } else {
-                    LoginState.Error(response.message() ?: "Login failed")
+                    // Try to deduce whether it's an email or password problem
+                    val code = response.code()
+                    val errorBody = try {
+                        response.errorBody()?.string()?.lowercase()
+                    } catch (e: Exception) {
+                        null
+                    }
+
+                    when {
+                        code == 404 -> uiState = LoginState.EmailInvalid
+                        code == 401 -> uiState = LoginState.PasswordInvalid
+                        errorBody != null && ("email" in errorBody || "adresse" in errorBody) -> uiState = LoginState.EmailInvalid
+                        errorBody != null && ("password" in errorBody || "mot de passe" in errorBody || "motdepasse" in errorBody) -> uiState = LoginState.PasswordInvalid
+                        else -> uiState = LoginState.Error(response.message() ?: "Login failed")
+                    }
                 }
             } catch (e: Exception) {
                 uiState = LoginState.Error(e.message ?: "An error occurred")

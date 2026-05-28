@@ -10,11 +10,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.NotificationsNone
@@ -27,7 +29,11 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -75,7 +81,10 @@ private data class HomeReservationCardUi(
 )
 
 @Composable
-fun HomeScreen() {
+fun HomeScreen(
+    onOfferClick: (String) -> Unit = {},
+    onProfileClick: () -> Unit = {}
+) {
     val context = LocalContext.current
     val sessionManager = remember(context) { SessionManager(context) }
     val factory: ViewModelProvider.Factory = remember(sessionManager) { UserViewModelFactory(sessionManager) }
@@ -108,13 +117,22 @@ fun HomeScreen() {
     val loading = userUiState is UserState.Loading || homeUiState is HomeState.Loading
     val errorMessage = (userUiState as? UserState.Error)?.message ?: (homeUiState as? HomeState.Error)?.message
 
-    val categories = remember { listOf("Burger", "Pizza", "Végétarien") }
+    var searchQuery by remember { mutableStateOf("") }
     val offers = (homeUiState as? HomeState.Success)?.offers.orEmpty()
-    val reservations = (homeUiState as? HomeState.Success)?.reservations.orEmpty()
+    val filteredOffers by remember(offers, searchQuery) {
+        derivedStateOf {
+            if (searchQuery.isBlank()) offers else offers.filter {
+                listOfNotNull(it.title, it.description, it.location)
+                    .joinToString(" ")
+                    .contains(searchQuery.trim(), ignoreCase = true)
+            }
+        }
+    }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .safeDrawingPadding()
             .background(
                 Brush.verticalGradient(
                     colors = listOf(
@@ -130,15 +148,11 @@ fun HomeScreen() {
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp, vertical = 18.dp)
         ) {
-            HomeTopHeader(user = user)
+            HomeTopHeader(user = user, onProfileClick = onProfileClick)
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            SearchBarLikeCard()
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            CategoryRow(categories = categories)
+            SearchBarLikeCard(query = searchQuery, onQueryChange = { searchQuery = it })
 
             Spacer(modifier = Modifier.height(18.dp))
 
@@ -146,42 +160,27 @@ fun HomeScreen() {
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            offers.chunked(2).forEach { row ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    row.forEach { offer ->
-                        val uiOffer = offer.toCardUi()
-                        FoodCard(
-                            modifier = Modifier.weight(1f),
-                            title = uiOffer.title,
-                            description = uiOffer.description,
-                            badge = uiOffer.badge,
-                            icon = uiOffer.icon
-                        )
+            if (filteredOffers.isEmpty()) {
+                EmptyStateCard(
+                    message = if (searchQuery.isBlank()) {
+                        "Aucune offre disponible pour le moment"
+                    } else {
+                        "Aucune offre ne correspond à votre recherche"
                     }
-                    if (row.size == 1) {
-                        Spacer(modifier = Modifier.weight(1f))
-                    }
-                }
-                Spacer(modifier = Modifier.height(12.dp))
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            SectionTitle(title = "Réservations")
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            reservations.forEach { reservation ->
-                val uiReservation = reservation.toCardUi()
-                ReservationCard(
-                    serviceName = uiReservation.serviceName,
-                    reservationDate = uiReservation.reservationDate,
-                    status = uiReservation.status
                 )
-                Spacer(modifier = Modifier.height(12.dp))
+            } else {
+                filteredOffers.forEach { offer ->
+                    val uiOffer = offer.toCardUi()
+                    FoodCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        title = uiOffer.title,
+                        description = uiOffer.description,
+                        badge = uiOffer.badge,
+                        icon = uiOffer.icon,
+                        onClick = { offer.id?.let(onOfferClick) }
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
             }
 
             if (loading) {
@@ -220,6 +219,7 @@ fun HomeScreenPreview() {
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .safeDrawingPadding()
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(Color(0xFF5A3726), Color(0xFF1A120F))
@@ -231,25 +231,18 @@ fun HomeScreenPreview() {
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp, vertical = 18.dp)
             ) {
-                HomeTopHeader(user = UserDto(id = "1", nom = "Patrick", prenom = "", email = "patrick@example.com", role = "Utilisateur", avatarUrl = null))
+                HomeTopHeader(
+                    user = UserDto(id = "1", nom = "Patrick", prenom = "", email = "patrick@example.com", role = "Utilisateur", avatarUrl = null),
+                    onProfileClick = {}
+                )
 
                 Spacer(modifier = Modifier.height(14.dp))
-                SearchBarLikeCard()
-                Spacer(modifier = Modifier.height(14.dp))
-                CategoryRow(categories = listOf("Burger","Pizza","Végétarien"))
+                SearchBarLikeCard(query = "", onQueryChange = {})
                 Spacer(modifier = Modifier.height(18.dp))
                 SectionTitle(title = "Offres")
                 Spacer(modifier = Modifier.height(10.dp))
 
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
-                    FoodCard(modifier = Modifier.weight(1f), title = "Double Beef", description = "Burger maison", badge = "1 portion", icon = Icons.Default.ShoppingCart)
-                    FoodCard(modifier = Modifier.weight(1f), title = "Fish Fillet", description = "Poisson croustillant", badge = "1 portion", icon = Icons.Default.FavoriteBorder)
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-                SectionTitle(title = "Réservations")
-                Spacer(modifier = Modifier.height(10.dp))
-                ReservationCard(serviceName = "Double Beef", reservationDate = "Aujourd'hui - 12:30", status = "Confirmée")
+                FoodCard(modifier = Modifier.fillMaxWidth(), title = "Double Beef", description = "Burger maison", badge = "1 portion", icon = Icons.Default.ShoppingCart, onClick = {})
                 Spacer(modifier = Modifier.height(12.dp))
             }
         }
@@ -277,13 +270,16 @@ private fun ReservationDto.toCardUi(): HomeReservationCardUi {
 }
 
 @Composable
-private fun HomeTopHeader(user: UserDto?) {
+private fun HomeTopHeader(user: UserDto?, onProfileClick: () -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.clickable { onProfileClick() }
+        ) {
             Box(
                 modifier = Modifier
                     .size(48.dp)
@@ -302,12 +298,7 @@ private fun HomeTopHeader(user: UserDto?) {
             Spacer(modifier = Modifier.width(12.dp))
 
             Column {
-                Text(
-                    text = "Bienvenue ${user?.nom ?: "Utilisateur"}",
-                    color = WhiteText,
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                Text(text = "Bienvenue ${user?.nom ?: "Utilisateur"}", color = WhiteText, fontSize = 24.sp, fontWeight = FontWeight.Bold)
                 Text(
                     text = user?.role?.let {
                         "${it.lowercase().replaceFirstChar { c -> c.uppercase() }} • ${user.email}"
@@ -327,32 +318,28 @@ private fun HomeTopHeader(user: UserDto?) {
 }
 
 @Composable
-private fun SearchBarLikeCard() {
+private fun SearchBarLikeCard(query: String, onQueryChange: (String) -> Unit) {
+    Card(shape = RoundedCornerShape(22.dp), colors = CardDefaults.cardColors(containerColor = Color.White), modifier = Modifier.fillMaxWidth()) {
+        androidx.compose.material3.OutlinedTextField(
+            value = query,
+            onValueChange = onQueryChange,
+            modifier = Modifier.fillMaxWidth(),
+            placeholder = { Text(text = "Rechercher une offre") },
+            leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = "Rechercher", tint = GrayText) },
+            singleLine = true,
+            shape = RoundedCornerShape(22.dp)
+        )
+    }
+}
+
+@Composable
+private fun EmptyStateCard(message: String) {
     Card(
-        shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = DarkSurface),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 14.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.Default.Search,
-                contentDescription = "Rechercher",
-                tint = GrayText
-            )
-
-            Spacer(modifier = Modifier.width(10.dp))
-
-            Text(
-                text = "Rechercher des plats",
-                color = GrayText,
-                fontSize = 14.sp
-            )
-        }
+        Text(text = message, color = WhiteText, modifier = Modifier.padding(16.dp))
     }
 }
 
@@ -394,9 +381,11 @@ private fun FoodCard(
     title: String,
     description: String,
     badge: String,
-    icon: ImageVector
+    icon: ImageVector,
+    onClick: () -> Unit = {}
 ) {
     Card(
+        onClick = onClick,
         modifier = modifier.height(190.dp),
         shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.cardColors(containerColor = DarkSurface)
@@ -469,77 +458,4 @@ private fun FoodCard(
     }
 }
 
-@Composable
-private fun ReservationCard(serviceName: String, reservationDate: String, status: String) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = DarkSurface)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = serviceName,
-                        color = WhiteText,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = reservationDate,
-                        color = GrayText,
-                        fontSize = 12.sp
-                    )
-                }
-
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(50))
-                        .background(
-                            when (status) {
-                                "Confirmée" -> Color(0xFF2E7D32)
-                                "Récupérée" -> Color(0xFF1565C0)
-                                else -> Color(0xFFE6A15A)
-                            }
-                        )
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
-                ) {
-                    Text(
-                        text = status,
-                        color = WhiteText,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Réservation active",
-                    color = GrayText,
-                    fontSize = 12.sp,
-                    fontStyle = FontStyle.Italic
-                )
-
-                Text(
-                    text = "Voir",
-                    color = OrangeAccent,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        }
-    }
-}
 

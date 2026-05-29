@@ -89,6 +89,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/offres", "/api/offres/*").hasAnyRole("OFFREUR", "ETUDIANT")
                         // Gestion des offres — réservé aux OFFREURs
                         .requestMatchers("/api/offres/**").hasRole("OFFREUR")
+                        // Reservations — les étudiants réservent, les offreurs suivent les retraits
+                        .requestMatchers(HttpMethod.POST, "/api/reservations/offres/*").hasRole("ETUDIANT")
+                        .requestMatchers(HttpMethod.GET, "/api/reservations/mes-reservations").hasRole("ETUDIANT")
+                        .requestMatchers(HttpMethod.GET, "/api/reservations/offres/*").hasRole("OFFREUR")
+                        .requestMatchers(HttpMethod.PATCH, "/api/reservations/**").hasRole("OFFREUR")
                         // Tout le reste nécessite une authentification
                         .anyRequest().authenticated()
                 )

@@ -3,8 +3,8 @@
  */
 package ht.edu.ueh.fds.frst.cdwm.smartcoding.foodshare.api.exception;
 
-public class NotFoundException extends RuntimeException {
-    public NotFoundException(String message) {
+public class StockEpuiseException extends RuntimeException {
+    public StockEpuiseException(String message) {
         super(message);
     }
 }

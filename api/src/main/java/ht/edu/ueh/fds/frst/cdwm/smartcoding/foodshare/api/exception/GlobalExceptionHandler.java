@@ -1,6 +1,6 @@
 /**
  * Gestionnaire d'exception pour les exceptions globales de toute l'API.
- * Mis à jour : ajout des handlers NotFoundException et AccesRefuseException
+ * Mis à jour : ajout des handlers StockEpuiseException et AccesRefuseException
  */
 
 package ht.edu.ueh.fds.frst.cdwm.smartcoding.foodshare.api.exception;
@@ -55,9 +55,8 @@ public class GlobalExceptionHandler {
                 .body(response);
     }
 
-    @ExceptionHandler( // Annotation pour intercepter les exceptions d'exécution d'EMAIL_DEJA_UTILISE
-            EmailDejaUtiliseException.class
-    )
+    // 409 = Conflict — Opération impossible sur l'état actuel
+    @ExceptionHandler(EmailDejaUtiliseException.class)
     public ResponseEntity<Map<String, Object>>
     handleEmailDejaUtilise(
             EmailDejaUtiliseException ex) {
@@ -79,7 +78,8 @@ public class GlobalExceptionHandler {
                 .body(response);
     }
 
-    @ExceptionHandler( // Annotation pour intercepter les exceptions de validation d'IDENTIFIANTS_INVALIDES
+    // Code HTTP = 401 Unauthorized
+    @ExceptionHandler(
             IdentifiantsInvalidesException.class
     )
     public ResponseEntity<Map<String, Object>>
@@ -116,7 +116,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(response);
     }
 
-    // ─── 403 — Accès refusé (mauvais propriétaire) ────────────────────────────
+    // ─── 403 — Accès refusé (mauvais propriétaire)
     @ExceptionHandler(AccesRefuseException.class)
     public ResponseEntity<Map<String, Object>> handleAccesRefuse(
             AccesRefuseException ex) {
@@ -129,7 +129,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
 
-    // ─── 404 — Ressource introuvable ──────────────────────────────────────────
+    // ─── 404 — Ressource introuvable
     @ExceptionHandler(RessourceIntrouvableException.class)
     public ResponseEntity<Map<String, Object>> handleRessourceIntrouvable(
             RessourceIntrouvableException ex) {
@@ -142,13 +142,22 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
-    // 409 — opération impossible sur l'état actuel
-    @ExceptionHandler({
-            IllegalArgumentException.class,
-            OperationNonAutoriseeException.class
-    })
-    public ResponseEntity<Map<String, Object>> handleOperationImpossible(
-            RuntimeException ex) {
+    // 409 — Opération impossible sur l'état actuel
+    @ExceptionHandler(OperationNonAutoriseeException.class)
+    public ResponseEntity<Map<String, Object>> handleOperationNonAutorisee(
+            OperationNonAutoriseeException ex) {
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("timestamp", LocalDateTime.now());
+        response.put("status", HttpStatus.CONFLICT.value());
+        response.put("message", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+    }
+    // 409 — Stock épuisé
+    @ExceptionHandler(StockEpuiseException.class)
+    public ResponseEntity<Map<String, Object>> handleStockEpuise(
+            StockEpuiseException ex) {
 
         Map<String, Object> response = new HashMap<>();
         response.put("timestamp", LocalDateTime.now());

@@ -1,2 +1,40 @@
 .idea/
+.gradle/
+build/
+captures/
 .DS_Store
+*.iml
+local.properties
+/.idea/*
+.externalNativeBuild
+.cxx/
+/.idea/**/workspace.xml
+/.idea/**/tasks.xml
+/.idea/**/dictionaries
+# Gradle
+/.gradle
+/.gradle/*
+
+# Android Studio generated files
+.idea/
+*.iml
+/.idea
+
+# Kotlin/Java
+/.gradle
+build/
+
+# Local config
+local.properties
+
+# Maven/Gradle wrappers
+/.mvn/
+
+# OS files
+.DS_Store
+
+# API backend (maven) build artifacts
+/api/target/
+
+# Ignore IntelliJ project files but allow specific VCS mappings
+!.gitignore

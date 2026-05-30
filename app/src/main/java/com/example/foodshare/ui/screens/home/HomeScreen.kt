@@ -20,10 +20,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.NotificationsNone
+import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.OutlinedTextField
@@ -48,6 +50,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.SubcomposeAsyncImage
 import com.example.foodshare.data.local.SessionManager
 import com.example.foodshare.data.remote.dto.OffreDto
 import com.example.foodshare.data.remote.dto.UserDto
@@ -68,6 +71,7 @@ private data class HomeOfferCardUi(
     val title: String,
     val description: String,
     val badge: String,
+    val imageUrl: String?,
     val icon: ImageVector
 )
 
@@ -226,6 +230,7 @@ private fun HomeScreenContent(
                             title = uiOffer.title,
                             description = uiOffer.description,
                             badge = uiOffer.badge,
+                            imageUrl = uiOffer.imageUrl,
                             icon = uiOffer.icon,
                             onClick = { offer.id?.let(onOfferClick) }
                         )
@@ -367,56 +372,62 @@ private fun FoodCard(
     title: String,
     description: String,
     badge: String,
+    imageUrl: String?,
     icon: ImageVector,
     onClick: () -> Unit = {}
 ) {
     Card(
         onClick = onClick,
-        modifier = modifier.height(190.dp),
+        modifier = modifier,
         shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.cardColors(containerColor = DarkSurface)
     ) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
                 .padding(14.dp),
-            verticalArrangement = Arrangement.SpaceBetween
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Column {
-                Box(
+            if (!imageUrl.isNullOrBlank()) {
+                SubcomposeAsyncImage(
+                    model = imageUrl,
+                    contentDescription = title,
                     modifier = Modifier
-                        .size(82.dp)
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(Color(0xFF3E2518)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = title,
-                        tint = OrangeAccent,
-                        modifier = Modifier.size(36.dp)
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                Text(
-                    text = title,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = WhiteText
+                        .fillMaxWidth()
+                        .height(180.dp)
+                        .clip(RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomStart = 14.dp, bottomEnd = 14.dp)),
+                    loading = {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(Color(0xFF3E2518)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(color = OrangeAccent, strokeWidth = 2.dp)
+                        }
+                    },
+                    error = {
+                        OfferImageFallback(title = title, icon = icon)
+                    }
                 )
-
-                Spacer(modifier = Modifier.height(3.dp))
-
-                Text(
-                    text = description,
-                    fontSize = 11.sp,
-                    color = GrayText,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
+            } else {
+                OfferImageFallback(title = title, icon = icon)
             }
+
+            Text(
+                text = title,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = WhiteText
+            )
+
+            Text(
+                text = description,
+                fontSize = 11.sp,
+                color = GrayText,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -444,14 +455,34 @@ private fun FoodCard(
     }
 }
 
+@Composable
+private fun OfferImageFallback(title: String, icon: ImageVector) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(180.dp)
+            .clip(RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomStart = 14.dp, bottomEnd = 14.dp))
+            .background(Color(0xFF3E2518)),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = if (icon == Icons.Default.ShoppingCart) Icons.Default.Restaurant else icon,
+            contentDescription = title,
+            tint = OrangeAccent,
+            modifier = Modifier.size(40.dp)
+        )
+    }
+}
+
 private fun OffreDto.toCardUi(): HomeOfferCardUi {
     val titleText = title?.takeIf { it.isNotBlank() } ?: "Offre"
     val descriptionText = description?.takeIf { it.isNotBlank() } ?: "Aucune description disponible"
     val badgeText = quantity?.let { "$it portion(s)" } ?: "Disponible"
+    val image = imageUrl?.takeIf { it.isNotBlank() }
     val icon = when (titleText.lowercase()) {
         "fish fillet" -> Icons.Default.FavoriteBorder
         "chicken crisp" -> Icons.Default.NotificationsNone
         else -> Icons.Default.ShoppingCart
     }
-    return HomeOfferCardUi(titleText, descriptionText, badgeText, icon)
+    return HomeOfferCardUi(titleText, descriptionText, badgeText, image, icon)
 }

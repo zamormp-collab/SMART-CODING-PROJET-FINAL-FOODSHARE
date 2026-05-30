@@ -12,8 +12,26 @@ import java.util.Locale
 
 class ReservationRepository(private val sessionManager: SessionManager) {
 
-	fun fetchUserReservations(userId: String?): Result<List<ReservationDto>> {
-		return Result.success(cachedReservations())
+	// Récupère la liste des réservations depuis l'API si possible, sinon utilise le cache
+	suspend fun fetchUserReservations(userId: String?): Result<List<ReservationDto>> {
+		return try {
+			val api = RetrofitClient.createServiceWithAuth(sessionManager, ReservationApiService::class.java)
+			val response = api.getReservations()
+			if (response.isSuccessful) {
+				val list = response.body().orEmpty()
+				// Met en cache la liste
+				sessionManager.saveReservationsJson(Gson().toJson(list))
+				Result.success(list)
+			} else {
+				// si l'API répond mais avec une erreur, retourner le cache si présent
+				val cached = cachedReservations()
+				if (cached.isNotEmpty()) Result.success(cached) else Result.failure(Exception("Erreur serveur: ${response.code()}"))
+			}
+		} catch (e: Exception) {
+			// en cas d'exception réseau, retourner le cache si disponible
+			val cached = cachedReservations()
+			if (cached.isNotEmpty()) Result.success(cached) else Result.failure(e)
+		}
 	}
 
 	suspend fun createReservation(offer: OffreDto): Result<ReservationDto> {
@@ -51,16 +69,52 @@ class ReservationRepository(private val sessionManager: SessionManager) {
 		}
 	}
 
-	fun fetchReservationById(id: String): Result<ReservationDto> {
+	// Récupère un détail de réservation depuis l'API si possible, sinon depuis le cache
+	suspend fun fetchReservationById(id: String): Result<ReservationDto> {
 		return try {
-			val reservation = cachedReservations().firstOrNull { it.id == id }
-			if (reservation != null) {
-				Result.success(reservation)
+			val api = RetrofitClient.createServiceWithAuth(sessionManager, ReservationApiService::class.java)
+			val response = api.getReservation(id)
+			if (response.isSuccessful) {
+				val res = response.body()
+				if (res != null) {
+					Result.success(res)
+				} else {
+					Result.failure(Exception("Réservation introuvable"))
+				}
 			} else {
-				Result.failure(Exception("Réservation introuvable"))
+				// fallback cache
+				val reservation = cachedReservations().firstOrNull { it.id == id }
+				if (reservation != null) Result.success(reservation) else Result.failure(Exception("Réservation introuvable (API ${response.code()})"))
 			}
 		} catch (e: Exception) {
-			Result.failure(e)
+			val reservation = cachedReservations().firstOrNull { it.id == id }
+			if (reservation != null) Result.success(reservation) else Result.failure(e)
+		}
+	}
+
+	// Annuler / supprimer une réservation via l'API et mettre à jour le cache local
+	suspend fun cancelReservation(id: String): Result<Boolean> {
+		return try {
+			val api = RetrofitClient.createServiceWithAuth(sessionManager, ReservationApiService::class.java)
+			val response = api.cancelReservation(id)
+			if (response.isSuccessful || response.code() == 204) {
+				// retirer du cache local
+				val updated = cachedReservations().filterNot { it.id == id }
+				sessionManager.saveReservationsJson(Gson().toJson(updated))
+				Result.success(true)
+			} else if (response.code() == 404) {
+				// déjà supprimée côté serveur, enlever du cache aussi
+				val updated = cachedReservations().filterNot { it.id == id }
+				sessionManager.saveReservationsJson(Gson().toJson(updated))
+				Result.success(true)
+			} else {
+				Result.failure(Exception("Impossible d'annuler la réservation: ${response.code()}"))
+			}
+		} catch (e: Exception) {
+			// en cas d'erreur réseau, tenter de retirer du cache pour garder l'UI cohérente
+			val updated = cachedReservations().filterNot { it.id == id }
+			sessionManager.saveReservationsJson(Gson().toJson(updated))
+			Result.success(true)
 		}
 	}
 

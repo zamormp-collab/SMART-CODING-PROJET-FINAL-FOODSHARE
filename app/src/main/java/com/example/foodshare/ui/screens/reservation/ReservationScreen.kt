@@ -149,7 +149,20 @@ fun ReservationScreen(
 			}
 		} else {
 			reservations.forEach { reservation ->
-				ReservationItemCard(reservation = reservation, onClick = { reservation.id?.let(onReservationClick) })
+				ReservationItemCard(
+					reservation = reservation,
+					onClick = { reservation.id?.let(onReservationClick) },
+					onCancel = {
+						reservation.id?.let { id ->
+							coroutineScope.launch {
+								val res = reservationRepository.cancelReservation(id)
+								if (res.isSuccess) {
+									reservations = reservations.filterNot { it.id == id }
+								}
+							}
+						}
+					}
+				)
 			}
 		}
 	}
@@ -173,7 +186,7 @@ private fun OfferReservationCard(offer: OffreDto, onReserve: () -> Unit) {
 }
 
 @Composable
-private fun ReservationItemCard(reservation: ReservationDto, onClick: () -> Unit) {
+private fun ReservationItemCard(reservation: ReservationDto, onClick: () -> Unit, onCancel: () -> Unit) {
 	Card(colors = CardDefaults.cardColors(containerColor = DarkSurface), shape = RoundedCornerShape(20.dp), modifier = Modifier.fillMaxWidth().clickable { onClick() }) {
 		Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
 			Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -182,6 +195,13 @@ private fun ReservationItemCard(reservation: ReservationDto, onClick: () -> Unit
 			}
 			Text(text = reservation.dateReservation ?: "Date non renseignée", color = WhiteText)
 			Text(text = reservation.statut ?: "En attente", color = WhiteText)
+			// Bouton annuler si la réservation n'est pas déjà annulée
+			if (reservation.statut.isNullOrBlank() || !reservation.statut.contains("annul", ignoreCase = true)) {
+				Spacer(modifier = Modifier.width(8.dp))
+				Button(onClick = onCancel, colors = ButtonDefaults.buttonColors(containerColor = OrangeAccent)) {
+					Text(text = "Annuler")
+				}
+			}
 		}
 	}
 }

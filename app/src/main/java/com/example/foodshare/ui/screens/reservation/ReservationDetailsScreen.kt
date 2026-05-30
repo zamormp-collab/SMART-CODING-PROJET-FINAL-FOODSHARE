@@ -26,6 +26,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -50,26 +52,20 @@ fun ReservationDetailsScreen(
 	val sessionManager = remember(context) { SessionManager(context) }
 	val repository = remember(sessionManager) { ReservationRepository(sessionManager) }
 
+	val coroutineScope = rememberCoroutineScope()
 	var loading by remember { mutableStateOf(true) }
-	var reservationText by remember { mutableStateOf<String?>(null) }
+	var reservation by remember { mutableStateOf<com.example.foodshare.data.remote.dto.ReservationDto?>(null) }
 	var errorMessage by remember { mutableStateOf<String?>(null) }
 
 	LaunchedEffect(reservationId) {
 		loading = true
 		errorMessage = null
-		reservationText = null
 		if (reservationId.isNullOrBlank()) {
 			errorMessage = "Identifiant de réservation invalide"
 		} else {
 			val result = repository.fetchReservationById(reservationId)
 			if (result.isSuccess) {
-				val res = result.getOrNull()!!
-				reservationText = buildString {
-					appendLine("Offre : ${res.offreTitre ?: "-"}")
-					appendLine("Date : ${res.dateReservation ?: "-"}")
-					appendLine("Statut : ${res.statut ?: "-"}")
-					appendLine("ID réservation : ${res.id ?: "-"}")
-				}
+				reservation = result.getOrNull()!!
 			} else {
 				errorMessage = result.exceptionOrNull()?.message ?: "Impossible de charger le détail"
 			}
@@ -98,8 +94,35 @@ fun ReservationDetailsScreen(
 			errorMessage != null -> Card(colors = CardDefaults.cardColors(containerColor = DarkSurface), shape = RoundedCornerShape(20.dp), modifier = Modifier.fillMaxWidth()) {
 				Text(text = errorMessage!!, color = WhiteText, modifier = Modifier.padding(16.dp))
 			}
-			reservationText != null -> Card(colors = CardDefaults.cardColors(containerColor = DarkSurface), shape = RoundedCornerShape(20.dp), modifier = Modifier.fillMaxWidth()) {
-				Text(text = reservationText!!, color = WhiteText, modifier = Modifier.padding(18.dp))
+			reservation != null -> {
+				val res = reservation!!
+				Card(colors = CardDefaults.cardColors(containerColor = DarkSurface), shape = RoundedCornerShape(20.dp), modifier = Modifier.fillMaxWidth()) {
+					Column(modifier = Modifier.padding(18.dp)) {
+						Text(text = "Offre : ${res.offreTitre ?: "-"}", color = WhiteText)
+						Text(text = "Date : ${res.dateReservation ?: "-"}", color = WhiteText)
+						Text(text = "Statut : ${res.statut ?: "-"}", color = WhiteText)
+						Text(text = "ID réservation : ${res.id ?: "-"}", color = WhiteText)
+					}
+				}
+
+				// Bouton d'annulation si possible
+				if (!res.statut.isNullOrBlank() && !res.statut.contains("annul", ignoreCase = true)) {
+					Button(onClick = {
+						coroutineScope.launch {
+							loading = true
+							val cancelResult = repository.cancelReservation(res.id.orEmpty())
+							loading = false
+							if (cancelResult.isSuccess) {
+								// Met à jour l'état local pour refléter l'annulation
+								reservation = res.copy(statut = "Annulée")
+							} else {
+								errorMessage = cancelResult.exceptionOrNull()?.message ?: "Impossible d'annuler"
+							}
+						}
+					}, colors = ButtonDefaults.buttonColors(containerColor = OrangeAccent)) {
+						Text(text = "Annuler la réservation")
+					}
+				}
 			}
 		}
 	}

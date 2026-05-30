@@ -11,10 +11,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FavoriteBorder
@@ -25,31 +26,32 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.foodshare.data.local.SessionManager
 import com.example.foodshare.data.remote.dto.OffreDto
-import com.example.foodshare.data.remote.dto.ReservationDto
 import com.example.foodshare.data.remote.dto.UserDto
 import com.example.foodshare.ui.theme.BrownPrimary
-import com.example.foodshare.ui.theme.DarkBackground
 import com.example.foodshare.ui.theme.DarkSurface
 import com.example.foodshare.ui.theme.FoodShareTheme
 import com.example.foodshare.ui.theme.GrayText
@@ -69,20 +71,15 @@ private data class HomeOfferCardUi(
     val icon: ImageVector
 )
 
-private data class HomeReservationCardUi(
-    val serviceName: String,
-    val reservationDate: String,
-    val status: String
-)
-
 @Composable
-fun HomeScreen(onProfileClick: () -> Unit = {}) {
+fun HomeScreen(
+    onOfferClick: (String) -> Unit = {},
+    onProfileClick: () -> Unit = {}
+) {
     val context = LocalContext.current
     val sessionManager = remember(context) { SessionManager(context) }
-    val factory: ViewModelProvider.Factory = remember(sessionManager) { UserViewModelFactory(sessionManager) }
-    val userViewModel: UserViewModel = viewModel<UserViewModel>(factory = factory)
-    val homeFactory: ViewModelProvider.Factory = remember { HomeViewModelFactory() }
-    val homeViewModel: HomeViewModel = viewModel<HomeViewModel>(factory = homeFactory)
+    val userViewModel: UserViewModel = viewModel(factory = remember(sessionManager) { UserViewModelFactory(sessionManager) })
+    val homeViewModel: HomeViewModel = viewModel(factory = remember { HomeViewModelFactory() })
 
     val cachedUserState = remember { userViewModel.getCachedUser() }
     val userUiState = userViewModel.uiState
@@ -108,275 +105,205 @@ fun HomeScreen(onProfileClick: () -> Unit = {}) {
 
     val loading = userUiState is UserState.Loading || homeUiState is HomeState.Loading
     val errorMessage = (userUiState as? UserState.Error)?.message ?: (homeUiState as? HomeState.Error)?.message
-
-    val categories = remember { listOf("Burger", "Pizza", "Végétarien") }
     val offers = (homeUiState as? HomeState.Success)?.offers.orEmpty()
-    val reservations = (homeUiState as? HomeState.Success)?.reservations.orEmpty()
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        BrownPrimary,
-                        DarkBackground
-                    )
-                )
-            )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 18.dp)
-        ) {
-            HomeTopHeader(user = user, onProfileClick = onProfileClick)
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            SearchBarLikeCard()
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            CategoryRow(categories = categories)
-
-            Spacer(modifier = Modifier.height(18.dp))
-
-            SectionTitle(title = "Offres")
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            offers.chunked(2).forEach { row ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    row.forEach { offer ->
-                        val uiOffer = offer.toCardUi()
-                        FoodCard(
-                            modifier = Modifier.weight(1f),
-                            title = uiOffer.title,
-                            description = uiOffer.description,
-                            badge = uiOffer.badge,
-                            icon = uiOffer.icon
-                        )
-                    }
-                    if (row.size == 1) {
-                        Spacer(modifier = Modifier.weight(1f))
-                    }
-                }
-                Spacer(modifier = Modifier.height(12.dp))
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            SectionTitle(title = "Réservations")
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            reservations.forEach { reservation ->
-                val uiReservation = reservation.toCardUi()
-                ReservationCard(
-                    serviceName = uiReservation.serviceName,
-                    reservationDate = uiReservation.reservationDate,
-                    status = uiReservation.status
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-            }
-
-            if (loading) {
-                Spacer(modifier = Modifier.height(8.dp))
-                LinearProgressIndicator(
-                    modifier = Modifier.fillMaxWidth(),
-                    color = Color(0xFFE6A15A),
-                    trackColor = Color(0x33222222)
-                )
-            }
-
-            if (!errorMessage.isNullOrBlank()) {
-                Spacer(modifier = Modifier.height(12.dp))
-                Card(
-                    shape = RoundedCornerShape(18.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFF4A2320)),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = errorMessage,
-                        color = Color.White,
-                        modifier = Modifier.padding(14.dp)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(18.dp))
-        }
-    }
+    HomeScreenContent(
+        user = user,
+        offers = offers,
+        loading = loading,
+        errorMessage = errorMessage,
+        onOfferClick = onOfferClick,
+        onProfileClick = onProfileClick
+    )
 }
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun HomeScreenPreview() {
     FoodShareTheme {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(Color(0xFF5A3726), Color(0xFF1A120F))
-                    )
+        HomeScreenContent(
+            user = UserDto(
+                id = "1",
+                nom = "Patrick",
+                prenom = "",
+                email = "patrick@example.com",
+                role = "Utilisateur",
+                avatarUrl = null
+            ),
+            offers = listOf(
+                OffreDto(
+                    id = "1",
+                    title = "Double Beef",
+                    description = "Burger maison généreux avec sauce spéciale.",
+                    quantity = 1,
+                    expirationDate = "01/06/2026",
+                    location = "Paris",
+                    imageUrl = null,
+                    userId = "u1"
+                ),
+                OffreDto(
+                    id = "2",
+                    title = "Chicken Box",
+                    description = "Poulet croustillant + boisson incluse.",
+                    quantity = 2,
+                    expirationDate = "02/06/2026",
+                    location = "Lyon",
+                    imageUrl = null,
+                    userId = "u2"
                 )
-        ) {
-            Column(modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 18.dp)
-            ) {
-                HomeTopHeader(
-                    user = UserDto(id = "1", nom = "Patrick", prenom = "", email = "patrick@example.com", role = "Utilisateur", avatarUrl = null),
-                    onProfileClick = {}
-                )
-
-                Spacer(modifier = Modifier.height(14.dp))
-                SearchBarLikeCard()
-                Spacer(modifier = Modifier.height(14.dp))
-                CategoryRow(categories = listOf("Burger","Pizza","Végétarien"))
-                Spacer(modifier = Modifier.height(18.dp))
-                SectionTitle(title = "Offres")
-                Spacer(modifier = Modifier.height(10.dp))
-
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
-                    FoodCard(modifier = Modifier.weight(1f), title = "Double Beef", description = "Burger maison", badge = "1 portion", icon = Icons.Default.ShoppingCart)
-                    FoodCard(modifier = Modifier.weight(1f), title = "Fish Fillet", description = "Poisson croustillant", badge = "1 portion", icon = Icons.Default.FavoriteBorder)
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-                SectionTitle(title = "Réservations")
-                Spacer(modifier = Modifier.height(10.dp))
-                ReservationCard(serviceName = "Double Beef", reservationDate = "Aujourd'hui - 12:30", status = "Confirmée")
-                Spacer(modifier = Modifier.height(12.dp))
-            }
-        }
-    }
-}
-
-private fun OffreDto.toCardUi(): HomeOfferCardUi {
-    val titleText = title?.takeIf { it.isNotBlank() } ?: "Offre"
-    val descriptionText = description?.takeIf { it.isNotBlank() } ?: "Aucune description disponible"
-    val badgeText = quantity?.let { "$it portion(s)" } ?: "Disponible"
-    val icon = when (titleText.lowercase()) {
-        "fish fillet" -> Icons.Default.FavoriteBorder
-        "chicken crisp" -> Icons.Default.NotificationsNone
-        else -> Icons.Default.ShoppingCart
-    }
-    return HomeOfferCardUi(titleText, descriptionText, badgeText, icon)
-}
-
-private fun ReservationDto.toCardUi(): HomeReservationCardUi {
-    return HomeReservationCardUi(
-        serviceName = offreTitre?.takeIf { it.isNotBlank() } ?: "Réservation",
-        reservationDate = dateReservation?.takeIf { it.isNotBlank() } ?: "Date non renseignée",
-        status = statut?.takeIf { it.isNotBlank() } ?: "En attente"
-    )
-}
-
-@Composable
-private fun HomeTopHeader(user: UserDto?, onProfileClick: () -> Unit) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(BrownPrimary)
-                    .clickable { onProfileClick() },
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = user?.nom?.firstOrNull()?.uppercase() ?: "F",
-                    color = WhiteText,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
-                )
-            }
-
-            Spacer(modifier = Modifier.width(12.dp))
-
-            Column {
-                Text(
-                    text = "Bienvenue ${user?.nom ?: "Utilisateur"}",
-                    color = WhiteText,
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = user?.role?.let {
-                        "${it.lowercase().replaceFirstChar { c -> c.uppercase() }} • ${user.email}"
-                    } ?: "Que souhaitez-vous manger aujourd'hui ?",
-                    color = GrayText,
-                    fontSize = 13.sp
-                )
-            }
-        }
-
-        Icon(
-            imageVector = Icons.Default.NotificationsNone,
-            contentDescription = "Notifications",
-            tint = WhiteText
+            ),
+            loading = false,
+            errorMessage = null,
+            onOfferClick = {},
+            onProfileClick = {}
         )
     }
 }
 
 @Composable
-private fun SearchBarLikeCard() {
-    Card(
-        shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        modifier = Modifier.fillMaxWidth()
+private fun HomeScreenContent(
+    user: UserDto?,
+    offers: List<OffreDto>,
+    loading: Boolean,
+    errorMessage: String?,
+    onOfferClick: (String) -> Unit,
+    onProfileClick: () -> Unit
+) {
+    var searchQuery by remember { mutableStateOf("") }
+
+    val filteredOffers by remember(offers, searchQuery) {
+        derivedStateOf {
+            if (searchQuery.isBlank()) offers else offers.filter {
+                listOfNotNull(it.title, it.description, it.location)
+                    .joinToString(" ")
+                    .contains(searchQuery.trim(), ignoreCase = true)
+            }
+        }
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFF4F1ED))
     ) {
-        Row(
+        HomeHeaderSection(user = user, onProfileClick = onProfileClick)
+
+        Surface(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 14.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .weight(1f)
+                .fillMaxWidth(),
+            color = BrownPrimary,
+            shape = RoundedCornerShape(topStart = 38.dp, topEnd = 38.dp)
         ) {
-            Icon(
-                imageVector = Icons.Default.Search,
-                contentDescription = "Rechercher",
-                tint = GrayText
-            )
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp, vertical = 18.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                SearchBarLikeCard(query = searchQuery, onQueryChange = { searchQuery = it })
+                SectionTitle()
 
-            Spacer(modifier = Modifier.width(10.dp))
-
-            Text(
-                text = "Rechercher des plats",
-                color = GrayText,
-                fontSize = 14.sp
-            )
+                when {
+                    loading -> LinearProgressIndicator(
+                        modifier = Modifier.fillMaxWidth(),
+                        color = Color(0xFFE6A15A),
+                        trackColor = Color(0x33FFFFFF)
+                    )
+                    !errorMessage.isNullOrBlank() -> ErrorStateCard(message = errorMessage)
+                    filteredOffers.isEmpty() -> EmptyStateCard(
+                        message = if (searchQuery.isBlank()) {
+                            "Aucune offre disponible pour le moment"
+                        } else {
+                            "Aucune offre ne correspond à votre recherche"
+                        }
+                    )
+                    else -> filteredOffers.forEach { offer ->
+                        val uiOffer = offer.toCardUi()
+                        FoodCard(
+                            modifier = Modifier.fillMaxWidth(),
+                            title = uiOffer.title,
+                            description = uiOffer.description,
+                            badge = uiOffer.badge,
+                            icon = uiOffer.icon,
+                            onClick = { offer.id?.let(onOfferClick) }
+                        )
+                    }
+                }
+            }
         }
     }
 }
 
 @Composable
-private fun CategoryRow(categories: List<String>) {
-    Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
-        categories.forEachIndexed { index, category ->
-            val selected = index == 0
+private fun HomeHeaderSection(user: UserDto?, onProfileClick: () -> Unit) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = Color.White,
+        shadowElevation = 4.dp
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .safeDrawingPadding()
+                .padding(horizontal = 16.dp, vertical = 18.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable { onProfileClick() },
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(54.dp)
+                        .clip(RoundedCornerShape(18.dp))
+                        .background(BrownPrimary),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = user?.nom?.firstOrNull()?.uppercase() ?: "F",
+                        color = WhiteText,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Bonjour ${user?.nom ?: "Utilisateur"}",
+                        color = Color(0xFF1F1F1F),
+                        fontSize = 23.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = user?.role?.let {
+                            "${it.lowercase().replaceFirstChar { c -> c.uppercase() }} • ${user.email}"
+                        } ?: "Appuyez pour voir votre profil",
+                        color = GrayText,
+                        fontSize = 13.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+
             Box(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(if (selected) OrangeAccent else Color.White)
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .size(48.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Color(0xFFF2F2F2)),
+                contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = category,
-                    color = if (selected) WhiteText else Color(0xFF333333),
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.SemiBold
+                Icon(
+                    imageVector = Icons.Default.NotificationsNone,
+                    contentDescription = "Notifications",
+                    tint = Color(0xFF222222)
                 )
             }
         }
@@ -384,9 +311,50 @@ private fun CategoryRow(categories: List<String>) {
 }
 
 @Composable
-private fun SectionTitle(title: String) {
+private fun SearchBarLikeCard(query: String, onQueryChange: (String) -> Unit) {
+    Card(
+        shape = RoundedCornerShape(22.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F4F0)),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        OutlinedTextField(
+            value = query,
+            onValueChange = onQueryChange,
+            modifier = Modifier.fillMaxWidth(),
+            placeholder = { Text(text = "Rechercher une offre") },
+            leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = "Rechercher", tint = GrayText) },
+            singleLine = true,
+            shape = RoundedCornerShape(22.dp)
+        )
+    }
+}
+
+@Composable
+private fun EmptyStateCard(message: String) {
+    Card(
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = DarkSurface),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Text(text = message, color = WhiteText, modifier = Modifier.padding(16.dp))
+    }
+}
+
+@Composable
+private fun ErrorStateCard(message: String) {
+    Card(
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF4A2320)),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Text(text = message, color = Color.White, modifier = Modifier.padding(16.dp))
+    }
+}
+
+@Composable
+private fun SectionTitle() {
     Text(
-        text = title,
+        text = "Offres",
         color = WhiteText,
         fontSize = 20.sp,
         fontWeight = FontWeight.Bold
@@ -399,9 +367,11 @@ private fun FoodCard(
     title: String,
     description: String,
     badge: String,
-    icon: ImageVector
+    icon: ImageVector,
+    onClick: () -> Unit = {}
 ) {
     Card(
+        onClick = onClick,
         modifier = modifier.height(190.dp),
         shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.cardColors(containerColor = DarkSurface)
@@ -417,7 +387,7 @@ private fun FoodCard(
                     modifier = Modifier
                         .size(82.dp)
                         .clip(RoundedCornerShape(20.dp))
-                        .background(DarkSurface),
+                        .background(Color(0xFF3E2518)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -474,77 +444,14 @@ private fun FoodCard(
     }
 }
 
-@Composable
-private fun ReservationCard(serviceName: String, reservationDate: String, status: String) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = DarkSurface)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = serviceName,
-                        color = WhiteText,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = reservationDate,
-                        color = GrayText,
-                        fontSize = 12.sp
-                    )
-                }
-
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(50))
-                        .background(
-                            when (status) {
-                                "Confirmée" -> Color(0xFF2E7D32)
-                                "Récupérée" -> Color(0xFF1565C0)
-                                else -> Color(0xFFE6A15A)
-                            }
-                        )
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
-                ) {
-                    Text(
-                        text = status,
-                        color = WhiteText,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Réservation active",
-                    color = GrayText,
-                    fontSize = 12.sp,
-                    fontStyle = FontStyle.Italic
-                )
-
-                Text(
-                    text = "Voir",
-                    color = OrangeAccent,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        }
+private fun OffreDto.toCardUi(): HomeOfferCardUi {
+    val titleText = title?.takeIf { it.isNotBlank() } ?: "Offre"
+    val descriptionText = description?.takeIf { it.isNotBlank() } ?: "Aucune description disponible"
+    val badgeText = quantity?.let { "$it portion(s)" } ?: "Disponible"
+    val icon = when (titleText.lowercase()) {
+        "fish fillet" -> Icons.Default.FavoriteBorder
+        "chicken crisp" -> Icons.Default.NotificationsNone
+        else -> Icons.Default.ShoppingCart
     }
+    return HomeOfferCardUi(titleText, descriptionText, badgeText, icon)
 }
-

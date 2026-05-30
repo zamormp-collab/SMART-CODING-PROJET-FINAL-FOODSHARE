@@ -7,6 +7,7 @@ import androidx.navigation.compose.composable
 import com.example.foodshare.ui.screens.auth.LoginScreen
 import com.example.foodshare.ui.screens.auth.RegisterScreen
 import com.example.foodshare.ui.screens.home.HomeScreen
+import com.example.foodshare.ui.screens.profile.ProfileScreen
 import com.example.foodshare.viewmodel.AuthViewModel
 import com.example.foodshare.viewmodel.RegisterViewModel
 
@@ -22,7 +23,13 @@ fun NavGraph(
     ) {
         // Ensure Home destination is registered before any navigate calls
         composable(Screen.Home.route) {
-            HomeScreen()
+            HomeScreen(onProfileClick = {
+                navController.navigate(Screen.Profile.route)
+            })
+        }
+
+        composable(Screen.Profile.route) {
+            ProfileScreen(onBackClick = { navController.popBackStack() })
         }
         composable(Screen.Login.route) {
             LoginScreen(
@@ -42,7 +49,7 @@ fun NavGraph(
             RegisterScreen(
                 viewModel = registerViewModel,
                 onRegisterSuccess = {
-                    navController.navigate(Screen.Login.route) {
+                    navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.Register.route) { inclusive = true }
                     }
                 },

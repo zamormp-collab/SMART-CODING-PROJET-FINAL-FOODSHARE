@@ -1,6 +1,7 @@
 package com.example.foodshare.ui.screens.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -75,7 +76,7 @@ private data class HomeReservationCardUi(
 )
 
 @Composable
-fun HomeScreen() {
+fun HomeScreen(onProfileClick: () -> Unit = {}) {
     val context = LocalContext.current
     val sessionManager = remember(context) { SessionManager(context) }
     val factory: ViewModelProvider.Factory = remember(sessionManager) { UserViewModelFactory(sessionManager) }
@@ -130,7 +131,7 @@ fun HomeScreen() {
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp, vertical = 18.dp)
         ) {
-            HomeTopHeader(user = user)
+            HomeTopHeader(user = user, onProfileClick = onProfileClick)
 
             Spacer(modifier = Modifier.height(14.dp))
 
@@ -231,7 +232,10 @@ fun HomeScreenPreview() {
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp, vertical = 18.dp)
             ) {
-                HomeTopHeader(user = UserDto(id = "1", nom = "Patrick", prenom = "", email = "patrick@example.com", role = "Utilisateur", avatarUrl = null))
+                HomeTopHeader(
+                    user = UserDto(id = "1", nom = "Patrick", prenom = "", email = "patrick@example.com", role = "Utilisateur", avatarUrl = null),
+                    onProfileClick = {}
+                )
 
                 Spacer(modifier = Modifier.height(14.dp))
                 SearchBarLikeCard()
@@ -277,7 +281,7 @@ private fun ReservationDto.toCardUi(): HomeReservationCardUi {
 }
 
 @Composable
-private fun HomeTopHeader(user: UserDto?) {
+private fun HomeTopHeader(user: UserDto?, onProfileClick: () -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -288,7 +292,8 @@ private fun HomeTopHeader(user: UserDto?) {
                 modifier = Modifier
                     .size(48.dp)
                     .clip(RoundedCornerShape(16.dp))
-                    .background(BrownPrimary),
+                    .background(BrownPrimary)
+                    .clickable { onProfileClick() },
                 contentAlignment = Alignment.Center
             ) {
                 Text(

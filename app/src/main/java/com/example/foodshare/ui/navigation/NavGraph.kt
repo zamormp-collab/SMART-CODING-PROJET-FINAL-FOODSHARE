@@ -8,6 +8,7 @@ import com.example.foodshare.ui.screens.auth.LoginScreen
 import com.example.foodshare.ui.screens.auth.RegisterScreen
 import com.example.foodshare.ui.screens.home.HomeScreen
 import com.example.foodshare.ui.screens.profile.ProfileScreen
+import com.example.foodshare.ui.screens.reservation.ReservationHistoryScreen
 import com.example.foodshare.viewmodel.AuthViewModel
 import com.example.foodshare.viewmodel.RegisterViewModel
 
@@ -29,7 +30,14 @@ fun NavGraph(
         }
 
         composable(Screen.Profile.route) {
-            ProfileScreen(onBackClick = { navController.popBackStack() })
+            ProfileScreen(
+                onBackClick = { navController.popBackStack() },
+                onReservationsClick = { navController.navigate(Screen.ReservationHistory.route) }
+            )
+        }
+
+        composable(Screen.ReservationHistory.route) {
+            ReservationHistoryScreen(onBackClick = { navController.popBackStack() })
         }
         composable(Screen.Login.route) {
             LoginScreen(

@@ -42,6 +42,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PersonOutline
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.WarningAmber
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -83,7 +84,8 @@ import com.google.gson.Gson
 
 @Composable
 fun ProfileScreen(
-    onBackClick: (() -> Unit)? = null
+    onBackClick: (() -> Unit)? = null,
+    onReservationsClick: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
     val sessionManager = remember(context) { SessionManager(context) }
@@ -109,7 +111,7 @@ fun ProfileScreen(
             user = loadedUser
             avatarUri = parseAvatarUri(loadedUser)
             isLoading = false
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             errorMessage = "Erreur lors du chargement du profil"
             isLoading = false
         }
@@ -121,7 +123,7 @@ fun ProfileScreen(
         isLoading = isLoading,
         errorMessage = errorMessage,
         onBackClick = onBackClick,
-        onPhotoChange = { avatarUri = it },
+        onReservationsClick = onReservationsClick,
         onSave = { updatedUser ->
             if (updatedUser != null) {
                 sessionManager.saveUserJson(Gson().toJson(updatedUser))
@@ -140,7 +142,7 @@ private fun ProfileScreenContent(
     isLoading: Boolean,
     errorMessage: String?,
     onBackClick: (() -> Unit)?,
-    onPhotoChange: (Uri) -> Unit,
+    onReservationsClick: (() -> Unit)?,
     onSave: (UserDto?) -> Unit,
     onPickImage: () -> Unit,
     context: Context
@@ -234,6 +236,13 @@ private fun ProfileScreenContent(
                                 icon = Icons.Default.PersonOutline,
                                 label = "Informations du compte",
                                 value = "Gérer les paramètres"
+                            )
+
+                            ProfileMenuItemCard(
+                                icon = Icons.Default.List,
+                                label = "Historique des réservations",
+                                value = "Voir vos réservations passées et en cours",
+                                onClick = { onReservationsClick?.invoke() }
                             )
 
                             ProfileMenuItemCard(
@@ -511,7 +520,8 @@ private fun ProfileInfoCard(
 private fun ProfileMenuItemCard(
     icon: ImageVector,
     label: String,
-    value: String
+    value: String,
+    onClick: () -> Unit = {}
 ) {
     Card(
         shape = RoundedCornerShape(24.dp),
@@ -519,7 +529,7 @@ private fun ProfileMenuItemCard(
         modifier = Modifier
             .fillMaxWidth()
             .shadow(4.dp, RoundedCornerShape(24.dp))
-            .clickable { }
+            .clickable { onClick() }
     ) {
         Row(
             modifier = Modifier
@@ -707,7 +717,7 @@ fun ProfileScreenPreview() {
             isLoading = false,
             errorMessage = null,
             onBackClick = { },
-            onPhotoChange = { },
+            onReservationsClick = { },
             onSave = { },
             onPickImage = { },
             context = LocalContext.current

@@ -23,6 +23,14 @@ class SessionManager(context: Context) {
         return prefs.getString("user_json", null)
     }
 
+    fun saveReservationsJson(json: String) {
+        prefs.edit().putString("reservations_json", json).apply()
+    }
+
+    fun getReservationsJson(): String? {
+        return prefs.getString("reservations_json", null)
+    }
+
     fun saveLastScreen(route: String) {
         prefs.edit().putString("last_screen", route).apply()
     }

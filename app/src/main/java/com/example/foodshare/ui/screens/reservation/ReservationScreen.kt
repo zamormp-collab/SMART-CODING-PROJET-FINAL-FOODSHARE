@@ -1,6 +1,7 @@
 package com.example.foodshare.ui.screens.reservation
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,7 +13,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ReceiptLong
@@ -36,7 +39,11 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.foodshare.data.local.SessionManager
+import com.example.foodshare.data.remote.RetrofitClient
+import com.example.foodshare.data.remote.dto.OffreDto
 import com.example.foodshare.data.remote.dto.ReservationDto
+import com.example.foodshare.data.repository.OffreRepository
 import com.example.foodshare.data.repository.ReservationRepository
 import com.example.foodshare.ui.theme.BrownPrimary
 import com.example.foodshare.ui.theme.DarkBackground
@@ -46,21 +53,29 @@ import com.example.foodshare.ui.theme.WhiteText
 
 @Composable
 fun ReservationScreen(
-	onBackClick: () -> Unit = {}
+	onBackClick: () -> Unit = {},
+	onReservationClick: (String) -> Unit = {}
 ) {
-	val repository = remember { ReservationRepository() }
+	val context = androidx.compose.ui.platform.LocalContext.current
+	val sessionManager = remember(context) { SessionManager(context) }
+	val reservationRepository = remember(sessionManager) { ReservationRepository(sessionManager) }
+	val offerRepository = remember(sessionManager) { OffreRepository(sessionManager) }
+
 	var loading by remember { mutableStateOf(true) }
+	var offers by remember { mutableStateOf<List<OffreDto>>(emptyList()) }
 	var reservations by remember { mutableStateOf<List<ReservationDto>>(emptyList()) }
 	var errorMessage by remember { mutableStateOf<String?>(null) }
 
 	LaunchedEffect(Unit) {
 		loading = true
-		val result = repository.fetchUserReservations(null)
-		if (result.isSuccess) {
-			reservations = result.getOrDefault(emptyList())
-			errorMessage = null
-		} else {
-			errorMessage = result.exceptionOrNull()?.message ?: "Impossible de charger les réservations"
+		val offerResult = offerRepository.fetchOffers()
+		val reservationResult = reservationRepository.fetchUserReservations(null)
+		offers = offerResult.getOrDefault(emptyList())
+		reservations = reservationResult.getOrDefault(emptyList())
+		errorMessage = when {
+			offerResult.isFailure -> offerResult.exceptionOrNull()?.message
+			reservationResult.isFailure -> reservationResult.exceptionOrNull()?.message
+			else -> null
 		}
 		loading = false
 	}
@@ -70,7 +85,8 @@ fun ReservationScreen(
 			.fillMaxSize()
 			.safeDrawingPadding()
 			.background(Brush.verticalGradient(listOf(BrownPrimary, DarkBackground)))
-			.padding(16.dp),
+			.padding(16.dp)
+			.verticalScroll(rememberScrollState()),
 		verticalArrangement = Arrangement.spacedBy(16.dp)
 	) {
 		Row(verticalAlignment = Alignment.CenterVertically) {
@@ -88,18 +104,30 @@ fun ReservationScreen(
 				horizontalArrangement = Arrangement.spacedBy(12.dp)
 			) {
 				Box(
-					modifier = Modifier
-						.size(52.dp)
-						.background(OrangeAccent, RoundedCornerShape(18.dp)),
+					modifier = Modifier.size(52.dp).background(OrangeAccent, RoundedCornerShape(18.dp)),
 					contentAlignment = Alignment.Center
 				) {
 					Icon(Icons.AutoMirrored.Filled.ReceiptLong, contentDescription = null, tint = WhiteText)
 				}
 				Column {
 					Text(text = "Mes réservations", color = WhiteText, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-					Text(text = "Vos demandes et retraits apparaîtront ici", color = WhiteText)
+					Text(text = "Choisissez une offre disponible pour réserver", color = WhiteText)
 				}
 			}
+		}
+
+		Text(text = "Offres disponibles", color = WhiteText, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+		offers.forEach { offer ->
+			OfferReservationCard(
+				offer = offer,
+				onReserve = {
+					val created = reservationRepository.createReservation(offer).getOrNull()
+					if (created != null) {
+						reservations = listOf(created) + reservations.filterNot { it.id == created.id }
+						onReservationClick(created.id.orEmpty())
+					}
+				}
+			)
 		}
 
 		if (loading) {
@@ -108,18 +136,41 @@ fun ReservationScreen(
 			Card(colors = CardDefaults.cardColors(containerColor = DarkSurface), shape = RoundedCornerShape(18.dp), modifier = Modifier.fillMaxWidth()) {
 				Text(text = errorMessage!!, color = WhiteText, modifier = Modifier.padding(16.dp))
 			}
+		}
+
+		Text(text = "Réservations effectuées", color = WhiteText, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+		if (reservations.isEmpty()) {
+			Card(colors = CardDefaults.cardColors(containerColor = DarkSurface), shape = RoundedCornerShape(18.dp), modifier = Modifier.fillMaxWidth()) {
+				Text(text = "Aucune réservation pour le moment", color = WhiteText, modifier = Modifier.padding(16.dp))
+			}
 		} else {
 			reservations.forEach { reservation ->
-				ReservationItemCard(reservation = reservation)
-				Spacer(modifier = Modifier.padding(6.dp))
+				ReservationItemCard(reservation = reservation, onClick = { reservation.id?.let(onReservationClick) })
 			}
 		}
 	}
 }
 
 @Composable
-private fun ReservationItemCard(reservation: ReservationDto) {
+private fun OfferReservationCard(offer: OffreDto, onReserve: () -> Unit) {
 	Card(colors = CardDefaults.cardColors(containerColor = DarkSurface), shape = RoundedCornerShape(20.dp), modifier = Modifier.fillMaxWidth()) {
+		Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+			Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+				Icon(Icons.Default.Restaurant, contentDescription = null, tint = OrangeAccent)
+				Text(text = offer.title ?: "Offre", color = WhiteText, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+			}
+			Text(text = offer.description ?: "Aucune description", color = WhiteText)
+			Text(text = "Lieu : ${offer.location ?: "-"}", color = WhiteText)
+			Button(onClick = onReserve, colors = ButtonDefaults.buttonColors(containerColor = OrangeAccent)) {
+				Text(text = "Réserver")
+			}
+		}
+	}
+}
+
+@Composable
+private fun ReservationItemCard(reservation: ReservationDto, onClick: () -> Unit) {
+	Card(colors = CardDefaults.cardColors(containerColor = DarkSurface), shape = RoundedCornerShape(20.dp), modifier = Modifier.fillMaxWidth().clickable { onClick() }) {
 		Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
 			Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
 				Icon(Icons.Default.Restaurant, contentDescription = null, tint = OrangeAccent)

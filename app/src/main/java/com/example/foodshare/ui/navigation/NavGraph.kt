@@ -9,6 +9,7 @@ import com.example.foodshare.ui.screens.auth.RegisterScreen
 import com.example.foodshare.ui.screens.detail.OffreDetailScreen
 import com.example.foodshare.ui.screens.home.HomeScreen
 import com.example.foodshare.ui.screens.reservation.ReservationScreen
+import com.example.foodshare.ui.screens.reservation.ReservationDetailsScreen
 import com.example.foodshare.ui.screens.profile.ProfileScreen
 import com.example.foodshare.viewmodel.AuthViewModel
 import com.example.foodshare.viewmodel.RegisterViewModel
@@ -37,6 +38,16 @@ fun NavGraph(
 
         composable(Screen.Reservation.route) {
             ReservationScreen(
+                onBackClick = { navController.popBackStack() },
+                onReservationClick = { reservationId ->
+                    navController.navigate("reservation_detail/$reservationId")
+                }
+            )
+        }
+
+        composable("reservation_detail/{reservationId}") { backStackEntry ->
+            ReservationDetailsScreen(
+                reservationId = backStackEntry.arguments?.getString("reservationId"),
                 onBackClick = { navController.popBackStack() }
             )
         }

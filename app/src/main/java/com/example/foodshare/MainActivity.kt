@@ -43,7 +43,7 @@ fun FoodShareApp() {
     val factory = AuthViewModelFactory(RetrofitClient.authApiService, sessionManager)
     val navBackStackEntry = navController.currentBackStackEntryAsState().value
     val currentRoute = navBackStackEntry?.destination?.route
-    val showBottomBar = currentRoute == Screen.Home.route || currentRoute == Screen.Reservation.route
+    val showBottomBar = currentRoute == Screen.Home.route || currentRoute == Screen.Reservation.route || currentRoute == "reservation_detail/{reservationId}"
 
     val authViewModel: AuthViewModel = viewModel(factory = factory)
     val registerViewModel: RegisterViewModel = viewModel(factory = factory)

@@ -50,6 +50,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -71,6 +72,7 @@ import com.example.foodshare.ui.theme.WhiteText
 import com.example.foodshare.viewmodel.UserState
 import com.example.foodshare.viewmodel.UserViewModel
 import com.example.foodshare.viewmodel.UserViewModelFactory
+import coil.compose.AsyncImage
 
 @Composable
 fun ProfileScreen(
@@ -572,11 +574,11 @@ private fun ReservationHistoryCard(reservation: ReservationDto) {
 				contentAlignment = Alignment.Center
 			) {
 				if (!reservation.imageUrl.isNullOrBlank()) {
-					// Image will be loaded here (for now, placeholder)
-					Box(
-						modifier = Modifier
-							.fillMaxSize()
-							.background(Color(0xFF5D4037))
+					AsyncImage(
+						model = reservation.imageUrl,
+						contentDescription = reservation.offreTitre,
+						contentScale = ContentScale.Crop,
+						modifier = Modifier.fillMaxSize()
 					)
 				} else {
 					Icon(

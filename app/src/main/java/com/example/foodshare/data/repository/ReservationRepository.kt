@@ -59,7 +59,8 @@ class ReservationRepository(private val sessionManager: SessionManager) {
 				offreId = offerId,
 				offreTitre = offer.title?.takeIf { it.isNotBlank() } ?: "Offre",
 				dateReservation = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.FRANCE).format(Date()),
-				statut = "Confirmée"
+				statut = "Confirmée",
+				imageUrl = offer.imageUrl
 			)
 			current.add(0, created)
 			sessionManager.saveReservationsJson(Gson().toJson(current))

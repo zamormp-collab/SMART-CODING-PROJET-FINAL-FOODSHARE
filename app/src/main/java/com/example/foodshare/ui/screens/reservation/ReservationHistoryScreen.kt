@@ -37,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -48,6 +49,7 @@ import com.example.foodshare.ui.theme.DarkSurface
 import com.example.foodshare.ui.theme.FoodShareTheme
 import com.example.foodshare.ui.theme.OrangeAccent
 import com.example.foodshare.ui.theme.WhiteText
+import coil.compose.AsyncImage
 
 data class ReservationHistoryItem(
 	val title: String,
@@ -120,9 +122,9 @@ fun ReservationHistoryScreen(
 	}
 }
 
-@Preview(showBackground = true, showSystemUi = true)
+@Preview(name = "Reservation History", showBackground = true, showSystemUi = true)
 @Composable
-private fun ReservationHistoryScreenPreview() {
+fun ReservationHistoryScreenPreview() {
 	FoodShareTheme {
 		ReservationHistoryScreen(
 			items = listOf(
@@ -131,35 +133,40 @@ private fun ReservationHistoryScreenPreview() {
 					date = "30/05/2026 • 12:30",
 					status = "Confirmée",
 					note = "Réservation validée et récupérée avec succès. Merci de votre achat !",
-					accent = Color(0xFF2E7D32)
+					accent = Color(0xFF2E7D32),
+					imageUrl = "https://images.unsplash.com/photo-1568901346375-23c9450c58cd"
 				),
 				ReservationHistoryItem(
 					title = "Chicken Crisp Wrap",
 					date = "29/05/2026 • 18:00",
 					status = "En attente",
 					note = "Votre demande est en cours de traitement. Nous vous confirmerons sous peu.",
-					accent = OrangeAccent
+					accent = OrangeAccent,
+					imageUrl = "https://images.unsplash.com/photo-1511690656952-34342bb7c2f2"
 				),
 				ReservationHistoryItem(
 					title = "Fresh Salad Bowl",
 					date = "27/05/2026 • 13:15",
 					status = "Annulée",
 					note = "La réservation a été annulée avant la récupération.",
-					accent = Color(0xFFD32F2F)
+					accent = Color(0xFFD32F2F),
+					imageUrl = "https://images.unsplash.com/photo-1546793665-c74683f339c1"
 				),
 				ReservationHistoryItem(
 					title = "Vegetarian Pasta Box",
 					date = "26/05/2026 • 11:45",
 					status = "Confirmée",
 					note = "Repas végétarien bio - Tous les ingrédients sont frais de ce matin.",
-					accent = Color(0xFF2E7D32)
+					accent = Color(0xFF2E7D32),
+					imageUrl = "https://images.unsplash.com/photo-1473093295043-cdd812d0e601"
 				),
 				ReservationHistoryItem(
 					title = "Dessert Chocolate Cake",
 					date = "25/05/2026 • 16:00",
 					status = "Confirmée",
 					note = "Gâteau au chocolat maison - Récupération avant 17h30.",
-					accent = Color(0xFF2E7D32)
+					accent = Color(0xFF2E7D32),
+					imageUrl = "https://images.unsplash.com/photo-1578985545062-69928b1d9587"
 				)
 			),
 			loading = false,
@@ -360,20 +367,15 @@ private fun HistoryItemCard(
 					.fillMaxWidth()
 					.height(120.dp)
 					.clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
-					.background(LinearGradient(
-						colors = listOf(
-							item.accent.copy(alpha = 0.3f),
-							item.accent.copy(alpha = 0.15f)
-						)
-					)),
+					.background(item.accent.copy(alpha = 0.18f)),
 				contentAlignment = Alignment.Center
 			) {
 				if (!item.imageUrl.isNullOrBlank()) {
-					// Image placeholder (real implementation would use Coil)
-					Box(
-						modifier = Modifier
-							.fillMaxSize()
-							.background(item.accent.copy(alpha = 0.2f))
+					AsyncImage(
+						model = item.imageUrl,
+						contentDescription = item.title,
+						contentScale = ContentScale.Crop,
+						modifier = Modifier.fillMaxSize()
 					)
 				} else {
 					Icon(
@@ -445,9 +447,6 @@ private fun HistoryItemCard(
 		}
 	}
 }
-
-// Helper gradient function (simplified)
-private fun LinearGradient(colors: List<Color>): Color = colors.first()
 
 @Composable
 private fun StatusBadge(status: String, tint: Color) {
@@ -614,20 +613,23 @@ private fun defaultHistoryItems(): List<ReservationHistoryItem> = listOf(
 		date = "30/05/2026 • 12:30",
 		status = "Confirmée",
 		note = "Réservation validée et récupérée avec succès.",
-		accent = Color(0xFF2E7D32)
+		accent = Color(0xFF2E7D32),
+		imageUrl = "https://images.unsplash.com/photo-1568901346375-23c9450c58cd"
 	),
 	ReservationHistoryItem(
 		title = "Chicken Crisp",
 		date = "29/05/2026 • 18:00",
 		status = "En attente",
 		note = "Votre demande est en cours de traitement.",
-		accent = OrangeAccent
+		accent = OrangeAccent,
+		imageUrl = "https://images.unsplash.com/photo-1511690656952-34342bb7c2f2"
 	),
 	ReservationHistoryItem(
 		title = "Fresh Salad",
 		date = "27/05/2026 • 13:15",
 		status = "Annulée",
 		note = "La réservation a été annulée avant la récupération.",
-		accent = Color(0xFFD32F2F)
+		accent = Color(0xFFD32F2F),
+		imageUrl = "https://images.unsplash.com/photo-1546793665-c74683f339c1"
 	)
 )

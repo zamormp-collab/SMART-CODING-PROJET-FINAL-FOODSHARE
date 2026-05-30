@@ -44,7 +44,24 @@ class RegisterViewModel(
                 val response = authApiService.register(request)
 
                 uiState = if (response.isSuccessful) {
+                    // Save token if returned
                     response.body()?.token?.let(sessionManager::saveToken)
+
+                    // Create and cache a UserDto locally from the registration form so Home can display the name immediately
+                    try {
+                        val user = com.example.foodshare.data.remote.dto.UserDto(
+                            id = response.body()?.userId ?: "",
+                            nom = nom,
+                            prenom = prenom,
+                            email = email,
+                            role = response.body()?.role ?: "Utilisateur",
+                            avatarUrl = null
+                        )
+                        sessionManager.saveUserJson(com.google.gson.Gson().toJson(user))
+                    } catch (_: Exception) {
+                        // ignore caching error
+                    }
+
                     RegisterState.Success
                 } else {
                     RegisterState.Error(response.message() ?: "Registration failed")

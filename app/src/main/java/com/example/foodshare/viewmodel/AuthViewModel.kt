@@ -41,6 +41,21 @@ class AuthViewModel(
 
                 if (response.isSuccessful) {
                     response.body()?.token?.let(sessionManager::saveToken)
+
+                    // After saving token, try to fetch the current user profile and cache it for immediate use
+                    try {
+                        val userApi = com.example.foodshare.data.remote.RetrofitClient.createServiceWithAuth(sessionManager, com.example.foodshare.data.remote.api.UserApiService::class.java)
+                        val profileResp = userApi.getProfile()
+                        if (profileResp.isSuccessful) {
+                            val user = profileResp.body()
+                            if (user != null) {
+                                sessionManager.saveUserJson(com.google.gson.Gson().toJson(user))
+                            }
+                        }
+                    } catch (_: Exception) {
+                        // ignore profile fetch errors
+                    }
+
                     uiState = LoginState.Success
                 } else {
                     // Try to deduce whether it's an email or password problem

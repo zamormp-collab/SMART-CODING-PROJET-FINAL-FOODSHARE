@@ -33,6 +33,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -40,7 +41,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.foodshare.data.local.SessionManager
-import com.example.foodshare.data.remote.RetrofitClient
 import com.example.foodshare.data.remote.dto.OffreDto
 import com.example.foodshare.data.remote.dto.ReservationDto
 import com.example.foodshare.data.repository.OffreRepository
@@ -50,6 +50,7 @@ import com.example.foodshare.ui.theme.DarkBackground
 import com.example.foodshare.ui.theme.DarkSurface
 import com.example.foodshare.ui.theme.OrangeAccent
 import com.example.foodshare.ui.theme.WhiteText
+import kotlinx.coroutines.launch
 
 @Composable
 fun ReservationScreen(
@@ -60,6 +61,7 @@ fun ReservationScreen(
 	val sessionManager = remember(context) { SessionManager(context) }
 	val reservationRepository = remember(sessionManager) { ReservationRepository(sessionManager) }
 	val offerRepository = remember(sessionManager) { OffreRepository(sessionManager) }
+	val coroutineScope = rememberCoroutineScope()
 
 	var loading by remember { mutableStateOf(true) }
 	var offers by remember { mutableStateOf<List<OffreDto>>(emptyList()) }
@@ -121,10 +123,12 @@ fun ReservationScreen(
 			OfferReservationCard(
 				offer = offer,
 				onReserve = {
-					val created = reservationRepository.createReservation(offer).getOrNull()
-					if (created != null) {
-						reservations = listOf(created) + reservations.filterNot { it.id == created.id }
-						onReservationClick(created.id.orEmpty())
+					coroutineScope.launch {
+						val created = reservationRepository.createReservation(offer).getOrNull()
+						if (created != null) {
+							reservations = listOf(created) + reservations.filterNot { it.id == created.id }
+							onReservationClick(created.id.orEmpty())
+						}
 					}
 				}
 			)

@@ -1,6 +1,8 @@
 package com.example.foodshare.data.repository
 
 import com.example.foodshare.data.local.SessionManager
+import com.example.foodshare.data.remote.RetrofitClient
+import com.example.foodshare.data.remote.api.ReservationApiService
 import com.example.foodshare.data.remote.dto.OffreDto
 import com.example.foodshare.data.remote.dto.ReservationDto
 import com.google.gson.Gson
@@ -14,11 +16,23 @@ class ReservationRepository(private val sessionManager: SessionManager) {
 		return Result.success(cachedReservations())
 	}
 
-	fun createReservation(offer: OffreDto): Result<ReservationDto> {
+	suspend fun createReservation(offer: OffreDto): Result<ReservationDto> {
 		return try {
 			val offerId = offer.id?.takeIf { it.isNotBlank() }
 			if (offerId == null) {
 				return Result.failure(IllegalArgumentException("Offre invalide"))
+			}
+
+			val api = RetrofitClient.createServiceWithAuth(sessionManager, ReservationApiService::class.java)
+			val response = api.reserveOffer(offerId)
+			if (response.isSuccessful) {
+				val createdFromApi = response.body()
+				if (createdFromApi != null) {
+					val current = cachedReservations().toMutableList()
+					current.add(0, createdFromApi)
+					sessionManager.saveReservationsJson(Gson().toJson(current))
+					return Result.success(createdFromApi)
+				}
 			}
 
 			val current = cachedReservations().toMutableList()

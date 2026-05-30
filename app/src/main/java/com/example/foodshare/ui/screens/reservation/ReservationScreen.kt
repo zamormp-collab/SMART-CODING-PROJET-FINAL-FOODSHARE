@@ -51,6 +51,8 @@ import com.example.foodshare.ui.theme.DarkSurface
 import com.example.foodshare.ui.theme.OrangeAccent
 import com.example.foodshare.ui.theme.WhiteText
 import kotlinx.coroutines.launch
+import androidx.compose.ui.tooling.preview.Preview
+import com.example.foodshare.ui.theme.FoodShareTheme
 
 @Composable
 fun ReservationScreen(
@@ -164,6 +166,44 @@ fun ReservationScreen(
 					}
 				)
 			}
+		}
+	}
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ReservationScreenPreview() {
+	FoodShareTheme {
+		Column(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+			// Header
+			Card(colors = CardDefaults.cardColors(containerColor = DarkSurface), shape = RoundedCornerShape(24.dp), modifier = Modifier.fillMaxWidth()) {
+				Row(modifier = Modifier.padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
+					Icon(Icons.AutoMirrored.Filled.ReceiptLong, contentDescription = null, tint = WhiteText)
+					Spacer(modifier = Modifier.width(12.dp))
+					Column {
+						Text(text = "Mes réservations", color = WhiteText, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+						Text(text = "Choisissez une offre disponible pour réserver", color = WhiteText)
+					}
+				}
+			}
+
+			// Sample offer
+			OfferReservationCard(
+				offer = OffreDto(
+					id = "1",
+					title = "Preview Burger",
+					description = "Un burger délicieux",
+					quantity = 1,
+					location = "Paris",
+					expirationDate = "01/06/2026",
+					imageUrl = null,
+					userId = null
+				),
+				onReserve = {}
+			)
+
+			// Sample reservation
+			ReservationItemCard(reservation = ReservationDto(id = "r1", offreId = "1", offreTitre = "Preview Burger", dateReservation = "30/05/2026 12:00", statut = "Confirmée"), onClick = {}, onCancel = {})
 		}
 	}
 }

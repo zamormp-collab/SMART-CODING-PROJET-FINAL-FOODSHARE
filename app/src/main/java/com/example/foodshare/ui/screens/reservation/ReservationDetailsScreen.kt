@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -42,6 +43,12 @@ import com.example.foodshare.ui.theme.DarkBackground
 import com.example.foodshare.ui.theme.DarkSurface
 import com.example.foodshare.ui.theme.OrangeAccent
 import com.example.foodshare.ui.theme.WhiteText
+import androidx.compose.ui.tooling.preview.Preview
+import com.example.foodshare.ui.theme.FoodShareTheme
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.ui.unit.dp
 
 @Composable
 fun ReservationDetailsScreen(
@@ -123,6 +130,27 @@ fun ReservationDetailsScreen(
 						Text(text = "Annuler la réservation")
 					}
 				}
+			}
+		}
+	}
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ReservationDetailsPreview() {
+	FoodShareTheme {
+		Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+			val res = com.example.foodshare.data.remote.dto.ReservationDto(id = "r1", offreId = "1", offreTitre = "Preview Burger", dateReservation = "30/05/2026 12:00", statut = "Confirmée")
+			Card(colors = CardDefaults.cardColors(containerColor = DarkSurface), shape = RoundedCornerShape(20.dp), modifier = Modifier.fillMaxWidth()) {
+				Column(modifier = Modifier.padding(18.dp)) {
+					Text(text = "Offre : ${res.offreTitre}", color = WhiteText)
+					Text(text = "Date : ${res.dateReservation}", color = WhiteText)
+					Text(text = "Statut : ${res.statut}", color = WhiteText)
+					Text(text = "ID réservation : ${res.id}", color = WhiteText)
+				}
+			}
+			Button(onClick = {}, modifier = Modifier.padding(top = 12.dp), colors = ButtonDefaults.buttonColors(containerColor = OrangeAccent)) {
+				Text(text = "Annuler la réservation")
 			}
 		}
 	}

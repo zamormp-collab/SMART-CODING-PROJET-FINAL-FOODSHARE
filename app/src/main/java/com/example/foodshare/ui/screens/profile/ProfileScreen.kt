@@ -33,7 +33,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -42,6 +41,8 @@ import com.example.foodshare.ui.theme.DarkBackground
 import com.example.foodshare.ui.theme.DarkSurface
 import com.example.foodshare.ui.theme.OrangeAccent
 import com.example.foodshare.ui.theme.WhiteText
+import androidx.compose.ui.tooling.preview.Preview
+import com.example.foodshare.ui.theme.FoodShareTheme
 
 @Composable
 fun ProfileScreen(
@@ -96,5 +97,15 @@ fun ProfileScreen(
 				}
 			}
 		}
+	}
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ProfileScreenPreview() {
+	FoodShareTheme {
+		// Simplified the preview by removing the redundant Column.
+		// ProfileScreen already fills the max size and has its own padding and background.
+		ProfileScreen(onBackClick = {})
 	}
 }

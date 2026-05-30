@@ -46,10 +46,28 @@ class AuthRepository(
         }
     }
 
-    suspend fun register(email: String, password: String, firstName: String, lastName: String): Result<AuthResponse> {
+    suspend fun register(
+        nom: String,
+        prenom: String,
+        email: String,
+        password: String,
+        role: String,
+        adresse: String,
+        telephone: String
+    ): Result<AuthResponse> {
         return try {
             Log.d(TAG, "Attempting registration for $email")
-            val response = api.register(RegisterRequest(email, password, firstName, lastName))
+            val response = api.register(
+                RegisterRequest(
+                    nom = nom,
+                    prenom = prenom,
+                    email = email,
+                    motDePasse = password,
+                    role = role,
+                    adresse = adresse,
+                    telephone = telephone
+                )
+            )
 
             if (response.isSuccessful) {
                 response.body()?.let {

@@ -49,12 +49,13 @@ import com.example.foodshare.ui.theme.FoodShareTheme
 import com.example.foodshare.ui.theme.OrangeAccent
 import com.example.foodshare.ui.theme.WhiteText
 
-private data class ReservationHistoryItem(
+data class ReservationHistoryItem(
 	val title: String,
 	val date: String,
 	val status: String,
 	val note: String,
-	val accent: Color
+	val accent: Color,
+	val imageUrl: String? = null
 )
 
 @Composable
@@ -123,7 +124,47 @@ fun ReservationHistoryScreen(
 @Composable
 private fun ReservationHistoryScreenPreview() {
 	FoodShareTheme {
-		ReservationHistoryScreen()
+		ReservationHistoryScreen(
+			items = listOf(
+				ReservationHistoryItem(
+					title = "Double Beef Burger",
+					date = "30/05/2026 • 12:30",
+					status = "Confirmée",
+					note = "Réservation validée et récupérée avec succès. Merci de votre achat !",
+					accent = Color(0xFF2E7D32)
+				),
+				ReservationHistoryItem(
+					title = "Chicken Crisp Wrap",
+					date = "29/05/2026 • 18:00",
+					status = "En attente",
+					note = "Votre demande est en cours de traitement. Nous vous confirmerons sous peu.",
+					accent = OrangeAccent
+				),
+				ReservationHistoryItem(
+					title = "Fresh Salad Bowl",
+					date = "27/05/2026 • 13:15",
+					status = "Annulée",
+					note = "La réservation a été annulée avant la récupération.",
+					accent = Color(0xFFD32F2F)
+				),
+				ReservationHistoryItem(
+					title = "Vegetarian Pasta Box",
+					date = "26/05/2026 • 11:45",
+					status = "Confirmée",
+					note = "Repas végétarien bio - Tous les ingrédients sont frais de ce matin.",
+					accent = Color(0xFF2E7D32)
+				),
+				ReservationHistoryItem(
+					title = "Dessert Chocolate Cake",
+					date = "25/05/2026 • 16:00",
+					status = "Confirmée",
+					note = "Gâteau au chocolat maison - Récupération avant 17h30.",
+					accent = Color(0xFF2E7D32)
+				)
+			),
+			loading = false,
+			errorMessage = null
+		)
 	}
 }
 
@@ -310,59 +351,103 @@ private fun HistoryItemCard(
 		elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
 	) {
 		Column(
-			modifier = Modifier.padding(18.dp),
-			verticalArrangement = Arrangement.spacedBy(12.dp)
+			modifier = Modifier.padding(0.dp),
+			verticalArrangement = Arrangement.spacedBy(0.dp)
 		) {
-			Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-				Box(
-					modifier = Modifier
-						.size(48.dp)
-						.clip(CircleShape)
-						.background(item.accent.copy(alpha = 0.18f)),
-					contentAlignment = Alignment.Center
-				) {
-					Icon(Icons.Filled.History, contentDescription = null, tint = item.accent)
-				}
-
-				Column(modifier = Modifier.weight(1f)) {
-					Text(
-						text = item.title,
-						color = WhiteText,
-						fontSize = 16.sp,
-						fontWeight = FontWeight.Bold,
-						maxLines = 1,
-						overflow = TextOverflow.Ellipsis
+			// Image banner
+			Box(
+				modifier = Modifier
+					.fillMaxWidth()
+					.height(120.dp)
+					.clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
+					.background(LinearGradient(
+						colors = listOf(
+							item.accent.copy(alpha = 0.3f),
+							item.accent.copy(alpha = 0.15f)
+						)
+					)),
+				contentAlignment = Alignment.Center
+			) {
+				if (!item.imageUrl.isNullOrBlank()) {
+					// Image placeholder (real implementation would use Coil)
+					Box(
+						modifier = Modifier
+							.fillMaxSize()
+							.background(item.accent.copy(alpha = 0.2f))
 					)
-					Text(
-						text = item.date,
-						color = Color(0xFFBDBDBD),
-						fontSize = 12.sp,
-						maxLines = 1,
-						overflow = TextOverflow.Ellipsis
+				} else {
+					Icon(
+						Icons.Filled.History,
+						contentDescription = null,
+						tint = item.accent.copy(alpha = 0.8f),
+						modifier = Modifier.size(42.dp)
 					)
 				}
 			}
 
-			StatusBadge(status = item.status, tint = item.accent)
-
-			Text(
-				text = item.note,
-				color = WhiteText,
-				fontSize = 13.sp,
-				lineHeight = 18.sp
-			)
-
-			Button(
-				onClick = onClick,
-				colors = ButtonDefaults.buttonColors(containerColor = OrangeAccent),
-				shape = RoundedCornerShape(18.dp),
-				modifier = Modifier.fillMaxWidth()
+			// Content
+			Column(
+				modifier = Modifier.padding(16.dp),
+				verticalArrangement = Arrangement.spacedBy(10.dp)
 			) {
-				Text(text = "Voir le détail")
+				Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+					Box(
+						modifier = Modifier
+							.size(40.dp)
+							.clip(CircleShape)
+							.background(item.accent.copy(alpha = 0.18f)),
+						contentAlignment = Alignment.Center
+					) {
+						Icon(Icons.Filled.History, contentDescription = null, tint = item.accent, modifier = Modifier.size(18.dp))
+					}
+
+					Column(modifier = Modifier.weight(1f)) {
+						Text(
+							text = item.title,
+							color = WhiteText,
+							fontSize = 16.sp,
+							fontWeight = FontWeight.Bold,
+							maxLines = 1,
+							overflow = TextOverflow.Ellipsis
+						)
+						Text(
+							text = item.date,
+							color = Color(0xFFBDBDBD),
+							fontSize = 12.sp,
+							maxLines = 1,
+							overflow = TextOverflow.Ellipsis
+						)
+					}
+				}
+
+				StatusBadge(status = item.status, tint = item.accent)
+
+				Text(
+					text = item.note,
+					color = Color(0xFFE0E0E0),
+					fontSize = 12.sp,
+					lineHeight = 16.sp,
+					maxLines = 2,
+					overflow = TextOverflow.Ellipsis
+				)
+
+				Button(
+					onClick = onClick,
+					colors = ButtonDefaults.buttonColors(containerColor = item.accent),
+					shape = RoundedCornerShape(14.dp),
+					modifier = Modifier
+						.fillMaxWidth()
+						.height(38.dp)
+				) {
+					Text(text = "Voir le détail", fontSize = 13.sp)
+				}
 			}
 		}
 	}
 }
+
+// Helper gradient function (simplified)
+private fun LinearGradient(colors: List<Color>): Color = colors.first()
 
 @Composable
 private fun StatusBadge(status: String, tint: Color) {

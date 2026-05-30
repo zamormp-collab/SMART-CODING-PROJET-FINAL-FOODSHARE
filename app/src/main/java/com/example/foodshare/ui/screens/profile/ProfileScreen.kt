@@ -561,43 +561,68 @@ private fun ReservationHistoryCard(reservation: ReservationDto) {
 		elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
 		modifier = Modifier.fillMaxWidth()
 	) {
-		Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-			Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-				Box(
-					modifier = Modifier
-						.size(48.dp)
-						.clip(RoundedCornerShape(16.dp))
-						.background(Color(0x22FFFFFF)),
-					contentAlignment = Alignment.Center
-				) {
-					Icon(Icons.Filled.History, contentDescription = null, tint = OrangeAccent, modifier = Modifier.size(22.dp))
+		Column(modifier = Modifier.padding(0.dp), verticalArrangement = Arrangement.spacedBy(0.dp)) {
+			// Image section
+			Box(
+				modifier = Modifier
+					.fillMaxWidth()
+					.height(140.dp)
+					.clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
+					.background(Color(0x22FFFFFF)),
+				contentAlignment = Alignment.Center
+			) {
+				if (!reservation.imageUrl.isNullOrBlank()) {
+					// Image will be loaded here (for now, placeholder)
+					Box(
+						modifier = Modifier
+							.fillMaxSize()
+							.background(Color(0xFF5D4037))
+					)
+				} else {
+					Icon(
+						Icons.Filled.History,
+						contentDescription = null,
+						tint = OrangeAccent,
+						modifier = Modifier.size(48.dp)
+					)
 				}
-
-				Column(modifier = Modifier.weight(1f)) {
-					Text(
-						text = reservation.offreTitre.orDash("Réservation"),
-						color = WhiteText,
-						fontSize = 16.sp,
-						fontWeight = FontWeight.Bold,
-						maxLines = 1,
-						overflow = TextOverflow.Ellipsis
-					)
-					Text(
-						text = reservation.dateReservation.orDash("Date non renseignée"),
-						color = GrayText,
-						fontSize = 12.sp,
-						maxLines = 1,
-						overflow = TextOverflow.Ellipsis
-					)
-				</Column>
 			}
 
-			StatusBadge(
-				text = reservation.statut.orDash("Statut"),
-				backgroundColor = badgeColor,
-				textColor = badgeTextColor,
-				icon = badgeIcon
-			)
+			// Content section
+			Column(
+				modifier = Modifier.padding(16.dp),
+				verticalArrangement = Arrangement.spacedBy(12.dp)
+			) {
+				Row(
+					verticalAlignment = Alignment.CenterVertically,
+					horizontalArrangement = Arrangement.spacedBy(12.dp)
+				) {
+					Column(modifier = Modifier.weight(1f)) {
+						Text(
+							text = reservation.offreTitre.orDash("Réservation"),
+							color = WhiteText,
+							fontSize = 16.sp,
+							fontWeight = FontWeight.Bold,
+							maxLines = 1,
+							overflow = TextOverflow.Ellipsis
+						)
+						Text(
+							text = reservation.dateReservation.orDash("Date non renseignée"),
+							color = GrayText,
+							fontSize = 12.sp,
+							maxLines = 1,
+							overflow = TextOverflow.Ellipsis
+						)
+					}
+				}
+
+				StatusBadge(
+					text = reservation.statut.orDash("Statut"),
+					backgroundColor = badgeColor,
+					textColor = badgeTextColor,
+					icon = badgeIcon
+				)
+			}
 		}
 	}
 }

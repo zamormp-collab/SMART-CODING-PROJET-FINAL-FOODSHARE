@@ -5,6 +5,7 @@ data class ReservationDto(
     val offreId: String?,
     val offreTitre: String?,
     val dateReservation: String?,
-    val statut: String?
+    val statut: String?,
+    val imageUrl: String? = null
 )
 

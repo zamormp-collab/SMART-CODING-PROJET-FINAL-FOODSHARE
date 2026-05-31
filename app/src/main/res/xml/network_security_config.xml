@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!--
+    Configuration précédente (conservation pour référence):
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">10.0.2.2</domain>
+        <domain includeSubdomains="true">localhost</domain>
+        <domain includeSubdomains="true">127.0.0.1</domain>
+        <domain includeSubdomains="true">192.168.1.50</domain>
+    </domain-config>
+    -->
+
+    <!-- Nouvelle stratégie: Cleartext DÉSACTIVÉ par défaut pour la sécurité -->
+    <base-config cleartextTrafficPermitted="false" />
+
+    <!-- Cleartext autorisé UNIQUEMENT pour le débogage local -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">debug.domain.com</domain>
+        <domain includeSubdomains="true">10.0.2.2</domain>
+        <domain includeSubdomains="true">localhost</domain>
+        <domain includeSubdomains="true">127.0.0.1</domain>
+        <domain includeSubdomains="true">192.168.1.50</domain>
+    </domain-config>
+</network-security-config>
+

@@ -1,8 +1,8 @@
 package com.example.foodshare.data.remote
 
 import android.util.Log
-import com.example.foodshare.data.remote.api.AuthApiService
 import com.example.foodshare.data.local.SessionManager
+import com.example.foodshare.data.remote.api.AuthApiService
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -15,7 +15,7 @@ object RetrofitClient {
     // - Émulateur Android: "http://10.0.2.2:8080/"
     // - Device réel/Téléphone: "http://192.168.1.50:8080/"
     private const val BASE_URL = "https://naturist-gab-discharge.ngrok-free.dev"
-    private val TAG = "RetrofitClient"
+    private const val TAG = "RetrofitClient"
 
     // OkHttpClient principal avec timeouts configurés
     private val baseHttpClient: OkHttpClient by lazy {
@@ -46,6 +46,9 @@ object RetrofitClient {
         retrofit.create(AuthApiService::class.java)
     }
 
+    /**
+     * Create a service that automatically adds Authorization: Bearer <token> when available
+     */
     fun <T> createServiceWithAuth(sessionManager: SessionManager, serviceClass: Class<T>): T {
         val authInterceptor = Interceptor { chain ->
             val token = sessionManager.getToken()

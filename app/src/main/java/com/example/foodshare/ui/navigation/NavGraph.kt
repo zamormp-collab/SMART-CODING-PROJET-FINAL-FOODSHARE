@@ -10,6 +10,7 @@ import com.example.foodshare.ui.screens.home.HomeScreen
 import com.example.foodshare.ui.screens.profile.ProfileScreen
 import com.example.foodshare.ui.screens.reservation.ReservationHistoryScreen
 import com.example.foodshare.viewmodel.AuthViewModel
+import com.example.foodshare.viewmodel.LoginState
 import com.example.foodshare.viewmodel.RegisterViewModel
 
 @Composable
@@ -18,15 +19,22 @@ fun NavGraph(
     authViewModel: AuthViewModel,
     registerViewModel: RegisterViewModel
 ) {
+    val startDestination = if (authViewModel.uiState is LoginState.Success) {
+        Screen.Home.route
+    } else {
+        Screen.Login.route
+    }
+
     NavHost(
         navController = navController,
-        startDestination = Screen.Login.route
+        startDestination = startDestination
     ) {
-        // Ensure Home destination is registered before any navigate calls
         composable(Screen.Home.route) {
-            HomeScreen(onProfileClick = {
-                navController.navigate(Screen.Profile.route)
-            })
+            HomeScreen(
+                onProfileClick = {
+                    navController.navigate(Screen.Profile.route)
+                }
+            )
         }
 
         composable(Screen.Profile.route) {
@@ -39,6 +47,7 @@ fun NavGraph(
         composable(Screen.ReservationHistory.route) {
             ReservationHistoryScreen(onBackClick = { navController.popBackStack() })
         }
+
         composable(Screen.Login.route) {
             LoginScreen(
                 viewModel = authViewModel,
@@ -66,7 +75,5 @@ fun NavGraph(
                 }
             )
         }
-
-        // Home is registered above
     }
 }

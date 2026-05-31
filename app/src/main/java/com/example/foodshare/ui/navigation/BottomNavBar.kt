@@ -9,28 +9,39 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.runtime.Composable
+import androidx.navigation.NavHostController
 
 @Composable
-fun BottomNavBar() {
-    NavigationBar(
-        containerColor = MaterialTheme.colorScheme.surface
-    ) {
+fun BottomNavBar(navController: NavHostController, currentRoute: String?) {
+    NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
         NavigationBarItem(
-            selected = true,
-            onClick = {},
-            icon = { Icon(Icons.Default.Home, contentDescription = null) }
+            selected = currentRoute == Screen.Home.route,
+            onClick = {
+                navController.navigate(Screen.Home.route) {
+                    launchSingleTop = true
+                }
+            },
+            icon = { Icon(Icons.Default.Home, contentDescription = "Accueil") }
         )
 
         NavigationBarItem(
-            selected = false,
-            onClick = {},
-            icon = { Icon(Icons.Default.Favorite, contentDescription = null) }
+            selected = currentRoute == Screen.ReservationHistory.route,
+            onClick = {
+                navController.navigate(Screen.ReservationHistory.route) {
+                    launchSingleTop = true
+                }
+            },
+            icon = { Icon(Icons.Default.Favorite, contentDescription = "Historique") }
         )
 
         NavigationBarItem(
-            selected = false,
-            onClick = {},
-            icon = { Icon(Icons.Default.Person, contentDescription = null) }
+            selected = currentRoute == Screen.Profile.route,
+            onClick = {
+                navController.navigate(Screen.Profile.route) {
+                    launchSingleTop = true
+                }
+            },
+            icon = { Icon(Icons.Default.Person, contentDescription = "Profil") }
         )
     }
 }

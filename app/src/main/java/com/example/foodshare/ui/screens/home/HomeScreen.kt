@@ -65,7 +65,8 @@ import com.example.foodshare.viewmodel.HomeViewModel
 import com.example.foodshare.viewmodel.HomeViewModelFactory
 import com.example.foodshare.viewmodel.UserState
 import com.example.foodshare.viewmodel.UserViewModel
-import com.example.foodshare.viewmodel.UserViewModelFactoryt
+import com.example.foodshare.viewmodel.UserViewModelFactory
+
 private data class HomeOfferCardUi(
     val title: String,
     val description: String,

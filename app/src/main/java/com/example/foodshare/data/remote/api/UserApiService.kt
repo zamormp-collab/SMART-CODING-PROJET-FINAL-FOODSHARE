@@ -8,4 +8,3 @@ interface UserApiService {
     @GET("api/auth/me")
     suspend fun getProfile(): Response<UserDto>
 }
-

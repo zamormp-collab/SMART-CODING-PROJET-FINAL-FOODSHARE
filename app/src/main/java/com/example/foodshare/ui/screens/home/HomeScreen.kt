@@ -50,6 +50,7 @@ import com.example.foodshare.ui.theme.BrownPrimary
 import com.example.foodshare.ui.theme.DarkSurface
 import com.example.foodshare.ui.theme.FoodShareTheme
 import com.example.foodshare.ui.theme.GrayText
+import com.example.foodshare.ui.theme.OrangeAccent
 import com.example.foodshare.ui.theme.WhiteText
 import com.example.foodshare.viewmodel.HomeState
 import com.example.foodshare.viewmodel.HomeViewModel
@@ -147,14 +148,28 @@ private fun HomeScreenContent(
     onProfileClick: () -> Unit
 ) {
     var searchQuery by remember { mutableStateOf("") }
+    var showOnlyNearMe by remember { mutableStateOf(false) }
 
-    val filteredOffers by remember(offers, searchQuery) {
+    // On essaie d'extraire une ville simplifiée de l'adresse (ex: "Delmas")
+    val userLocation = remember(user?.adresse) {
+        user?.adresse?.split(",")?.lastOrNull()?.trim() ?: user?.adresse ?: ""
+    }
+
+    val filteredOffers by remember(offers, searchQuery, showOnlyNearMe, userLocation) {
         derivedStateOf {
-            if (searchQuery.isBlank()) offers else offers.filter {
+            var result = if (searchQuery.isBlank()) offers else offers.filter {
                 listOfNotNull(it.title, it.description, it.location)
                     .joinToString(" ")
                     .contains(searchQuery.trim(), ignoreCase = true)
             }
+
+            if (showOnlyNearMe && userLocation.isNotBlank()) {
+                result = result.filter { offer ->
+                    val loc = offer.location ?: ""
+                    loc.isNotBlank() && (userLocation.contains(loc, ignoreCase = true) || loc.contains(userLocation, ignoreCase = true))
+                }
+            }
+            result
         }
     }
 
@@ -180,6 +195,19 @@ private fun HomeScreenContent(
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
                 SearchBar(query = searchQuery, onQueryChange = { searchQuery = it })
+
+                // Barre de filtres rapide
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    LocationFilterChip(
+                        label = if (userLocation.isNotBlank()) "À $userLocation" else "Près de moi",
+                        isSelected = showOnlyNearMe,
+                        onClick = { showOnlyNearMe = !showOnlyNearMe }
+                    )
+                }
+
                 SectionTitle()
 
                 when {
@@ -313,4 +341,32 @@ private fun SectionTitle() {
         fontSize = 20.sp,
         fontWeight = FontWeight.Bold
     )
+}
+
+@Composable
+private fun LocationFilterChip(
+    label: String,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    Surface(
+        modifier = Modifier
+            .clip(RoundedCornerShape(16.dp))
+            .clickable { onClick() },
+        color = if (isSelected) OrangeAccent else DarkSurface,
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = label,
+                color = WhiteText,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+    }
 }

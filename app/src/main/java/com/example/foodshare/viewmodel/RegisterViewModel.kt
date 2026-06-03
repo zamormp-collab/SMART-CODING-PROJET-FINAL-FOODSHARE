@@ -67,7 +67,8 @@ class RegisterViewModel(
                             prenom = prenom.ifBlank { null },
                             email = email,
                             role = role.ifBlank { "user" },
-                            avatarUrl = null
+                            avatarUrl = null,
+                            adresse = adresse
                         )
                         sessionManager.saveUserJson(Gson().toJson(user))
                     } catch (e: Exception) {

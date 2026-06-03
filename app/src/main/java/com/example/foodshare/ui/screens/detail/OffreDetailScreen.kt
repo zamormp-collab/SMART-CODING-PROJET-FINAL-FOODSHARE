@@ -71,7 +71,8 @@ fun OffreDetailScreen(
     offreId: String?,
     onBackClick: () -> Unit = {}
 ) {
-    val viewModel: OffreViewModel = viewModel(factory = remember { OffreViewModelFactory() })
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val viewModel: OffreViewModel = viewModel(factory = remember(context) { OffreViewModelFactory(context) })
     val uiState = viewModel.uiState
 
     LaunchedEffect(offreId) {

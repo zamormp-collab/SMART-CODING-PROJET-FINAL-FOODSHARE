@@ -3,6 +3,8 @@ package com.example.foodshare.data.remote
 import android.util.Log
 import com.example.foodshare.data.local.SessionManager
 import com.example.foodshare.data.remote.api.AuthApiService
+import com.example.foodshare.data.remote.api.OffreApiService
+import com.example.foodshare.data.remote.api.ReservationApiService
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -44,6 +46,14 @@ object RetrofitClient {
 
     val authApiService: AuthApiService by lazy {
         retrofit.create(AuthApiService::class.java)
+    }
+
+    val offreApiService: OffreApiService by lazy {
+        retrofit.create(OffreApiService::class.java)
+    }
+
+    val reservationApiService: ReservationApiService by lazy {
+        retrofit.create(ReservationApiService::class.java)
     }
 
     /**

@@ -42,17 +42,13 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -60,47 +56,31 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.SubcomposeAsyncImage
 import com.example.foodshare.data.remote.dto.OffreDto
-import com.example.foodshare.data.repository.OffreRepository
 import com.example.foodshare.ui.theme.BrownPrimary
 import com.example.foodshare.ui.theme.DarkSurface
 import com.example.foodshare.ui.theme.FoodShareTheme
 import com.example.foodshare.ui.theme.OrangeAccent
 import com.example.foodshare.ui.theme.WhiteText
+import com.example.foodshare.viewmodel.OffreDetailState
+import com.example.foodshare.viewmodel.OffreViewModel
+import com.example.foodshare.viewmodel.OffreViewModelFactory
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
 fun OffreDetailScreen(
     offreId: String?,
     onBackClick: () -> Unit = {}
 ) {
-    val context = LocalContext.current
-    val repository = remember(context) { OffreRepository() }
-
-    var loading by remember { mutableStateOf(true) }
-    var offer by remember { mutableStateOf<OffreDto?>(null) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
+    val viewModel: OffreViewModel = viewModel(factory = remember { OffreViewModelFactory() })
+    val uiState = viewModel.uiState
 
     LaunchedEffect(offreId) {
-        loading = true
-        errorMessage = null
-        offer = null
-
-        if (offreId.isNullOrBlank()) {
-            errorMessage = "Identifiant d'offre invalide"
-            loading = false
-            return@LaunchedEffect
-        }
-
-        val result = repository.fetchOffers().mapCatching { list ->
-            list.firstOrNull { it.id == offreId }
-                ?: throw IllegalArgumentException("Offre introuvable")
-        }
-        if (result.isSuccess) {
-            offer = result.getOrNull()
-        } else {
-            errorMessage = result.exceptionOrNull()?.message ?: "Impossible de charger l'offre"
-        }
-        loading = false
+        viewModel.loadOffer(offreId)
     }
+
+    val loading = uiState is OffreDetailState.Loading
+    val offer = (uiState as? OffreDetailState.Success)?.offer
+    val errorMessage = (uiState as? OffreDetailState.Error)?.message
 
     Column(
         modifier = Modifier
@@ -487,4 +467,3 @@ private fun isExpirationClose(expirationDate: String?): Boolean {
     val text = expirationDate?.lowercase().orEmpty()
     return text.contains("jourd") || text.contains("today") || text.contains("expir")
 }
-

@@ -1,20 +1,33 @@
 package com.example.foodshare.data.repository
 
+import com.example.foodshare.data.remote.api.OffreApiService
 import com.example.foodshare.data.remote.dto.OffreDto
 
-class OffreRepository {
-	// Pour l'instant retourne des données factices. Plus tard, on appellera l'API.
-	suspend fun fetchOffers(): Result<List<OffreDto>> {
-		return try {
-			val list = listOf(
-				OffreDto("1", "Double Beef", "Burger maison avec viande double", 1, "2026-05-30", "Bordeaux", null, "1"),
-				OffreDto("2", "Single Beef", "Simple et savoureux", 2, "2026-05-30", "Bordeaux", null, "1"),
-				OffreDto("3", "Fish Fillet", "Poisson croustillant", 1, "2026-05-29", "Bordeaux", null, "1"),
-				OffreDto("4", "Chicken Crisp", "Poulet croustillant", 1, "2026-05-31", "Bordeaux", null, "1")
-			)
-			Result.success(list)
-		} catch (e: Exception) {
-			Result.failure(e)
-		}
-	}
+class OffreRepository(private val apiService: OffreApiService) {
+    suspend fun fetchOffers(): Result<List<OffreDto>> {
+        return try {
+            val response = apiService.getOffres()
+            if (response.isSuccessful) {
+                Result.success(response.body() ?: emptyList())
+            } else {
+                // Si l'API échoue, on pourrait retourner des données factices ou l'erreur
+                Result.failure(Exception("Erreur API: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun fetchOffreById(id: String): Result<OffreDto> {
+        return try {
+            val response = apiService.getOffreById(id)
+            if (response.isSuccessful && response.body() != null) {
+                Result.success(response.body()!!)
+            } else {
+                Result.failure(Exception("Offre non trouvée"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

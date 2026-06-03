@@ -80,7 +80,10 @@ import com.example.foodshare.ui.theme.FoodShareTheme
 import com.example.foodshare.ui.theme.GrayText
 import com.example.foodshare.ui.theme.OrangeAccent
 import com.example.foodshare.ui.theme.WhiteText
-import com.google.gson.Gson
+import com.example.foodshare.viewmodel.UserState
+import com.example.foodshare.viewmodel.UserViewModel
+import com.example.foodshare.viewmodel.UserViewModelFactory
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
 fun ProfileScreen(
@@ -89,11 +92,11 @@ fun ProfileScreen(
 ) {
     val context = LocalContext.current
     val sessionManager = remember(context) { SessionManager(context) }
+    val userViewModel: UserViewModel = viewModel(factory = remember(sessionManager) { UserViewModelFactory(sessionManager) })
+    val cachedUserState = remember { userViewModel.getCachedUser() }
+    val userUiState = userViewModel.uiState
 
-    var user by remember { mutableStateOf<UserDto?>(null) }
     var avatarUri by remember { mutableStateOf<Uri?>(null) }
-    var isLoading by remember { mutableStateOf(true) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
 
     val pickImageLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -104,18 +107,24 @@ fun ProfileScreen(
     }
 
     LaunchedEffect(Unit) {
-        try {
-            isLoading = true
-            errorMessage = null
-            val loadedUser = loadUser(sessionManager)
-            user = loadedUser
-            avatarUri = parseAvatarUri(loadedUser)
-            isLoading = false
-        } catch (_: Exception) {
-            errorMessage = "Erreur lors du chargement du profil"
-            isLoading = false
+        if (cachedUserState !is UserState.Success && userUiState is UserState.Idle) {
+            userViewModel.loadCurrentUser()
         }
     }
+
+    val user = when {
+        userUiState is UserState.Success -> userUiState.user
+        cachedUserState is UserState.Success -> cachedUserState.user
+        else -> null
+    }
+
+    LaunchedEffect(user) {
+        avatarUri = parseAvatarUri(user)
+    }
+
+    val isLoading = userUiState is UserState.Loading
+    val errorMessage = (userUiState as? UserState.Error)?.message
+        ?: (cachedUserState as? UserState.Error)?.message
 
     ProfileScreenContent(
         user = user,
@@ -124,12 +133,7 @@ fun ProfileScreen(
         errorMessage = errorMessage,
         onBackClick = onBackClick,
         onReservationsClick = onReservationsClick,
-        onSave = { updatedUser ->
-            if (updatedUser != null) {
-                sessionManager.saveUserJson(Gson().toJson(updatedUser))
-                user = updatedUser
-            }
-        },
+        onSave = { updatedUser -> updatedUser?.let { userViewModel.saveUser(it) } },
         onPickImage = { pickImageLauncher.launch("image/*") },
         context = context
     )
@@ -675,15 +679,6 @@ private fun ProfileEmptyState() {
             fontWeight = FontWeight.Medium,
             textAlign = TextAlign.Center
         )
-    }
-}
-
-private fun loadUser(sessionManager: SessionManager): UserDto? {
-    val json = sessionManager.getUserJson() ?: return null
-    return try {
-        Gson().fromJson(json, UserDto::class.java)
-    } catch (_: Exception) {
-        null
     }
 }
 

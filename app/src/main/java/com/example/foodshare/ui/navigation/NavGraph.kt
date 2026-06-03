@@ -6,12 +6,15 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.foodshare.ui.screens.auth.LoginScreen
 import com.example.foodshare.ui.screens.auth.RegisterScreen
+import com.example.foodshare.ui.screens.detail.OffreDetailScreen
 import com.example.foodshare.ui.screens.home.HomeScreen
 import com.example.foodshare.ui.screens.profile.ProfileScreen
 import com.example.foodshare.ui.screens.reservation.ReservationHistoryScreen
 import com.example.foodshare.viewmodel.AuthViewModel
 import com.example.foodshare.viewmodel.LoginState
 import com.example.foodshare.viewmodel.RegisterViewModel
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
 
 @Composable
 fun NavGraph(
@@ -31,9 +34,23 @@ fun NavGraph(
     ) {
         composable(Screen.Home.route) {
             HomeScreen(
+                onOfferClick = { id ->
+                    navController.navigate(Screen.OffreDetail.createRoute(id))
+                },
                 onProfileClick = {
                     navController.navigate(Screen.Profile.route)
                 }
+            )
+        }
+
+        composable(
+            route = Screen.OffreDetail.route,
+            arguments = listOf(navArgument("offreId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val offreId = backStackEntry.arguments?.getString("offreId")
+            OffreDetailScreen(
+                offreId = offreId,
+                onBackClick = { navController.popBackStack() }
             )
         }
 

@@ -2,6 +2,7 @@ package com.example.foodshare.data.repository
 
 import com.example.foodshare.data.remote.api.ReservationApiService
 import com.example.foodshare.data.remote.dto.ReservationDto
+import com.example.foodshare.data.remote.dto.ReviewDto
 
 class ReservationRepository(private val apiService: ReservationApiService) {
     suspend fun fetchUserReservations(userId: String?): Result<List<ReservationDto>> {
@@ -29,6 +30,19 @@ class ReservationRepository(private val apiService: ReservationApiService) {
                 Result.success(response.body()!!)
             } else {
                 Result.failure(Exception("Échec de la réservation"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun submitReview(review: ReviewDto): Result<Unit> {
+        return try {
+            val response = apiService.sendReview(review)
+            if (response.isSuccessful) {
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception("Erreur lors de l'envoi de l'avis"))
             }
         } catch (e: Exception) {
             Result.failure(e)

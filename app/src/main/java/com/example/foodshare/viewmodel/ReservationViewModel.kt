@@ -6,6 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.foodshare.data.local.SessionManager
+import com.example.foodshare.data.remote.dto.ReviewDto
 import com.example.foodshare.data.remote.dto.UserDto
 import com.example.foodshare.data.repository.ReservationRepository
 import com.google.gson.Gson
@@ -17,6 +18,9 @@ class ReservationViewModel(
 ) : ViewModel() {
 
     var uiState by mutableStateOf<ReservationState>(ReservationState.Idle)
+        private set
+
+    var isSubmittingReview by mutableStateOf(false)
         private set
 
     fun loadReservations() {
@@ -34,6 +38,20 @@ class ReservationViewModel(
                 onSuccess = { ReservationState.Success(it) },
                 onFailure = { ReservationState.Error(it.message ?: "Erreur lors du chargement") }
             )
+        }
+    }
+
+    fun submitReview(reservationId: String, note: Int, commentaire: String, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            isSubmittingReview = true
+            val review = ReviewDto(reservationId, note, commentaire)
+            val result = repository.submitReview(review)
+            
+            isSubmittingReview = false
+            if (result.isSuccess) {
+                onSuccess()
+                loadReservations()
+            }
         }
     }
 

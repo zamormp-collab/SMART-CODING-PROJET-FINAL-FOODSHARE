@@ -1,6 +1,7 @@
 package com.example.foodshare.data.remote.api
 
 import com.example.foodshare.data.remote.dto.ReservationDto
+import com.example.foodshare.data.remote.dto.ReviewDto
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -16,4 +17,7 @@ interface ReservationApiService {
 
     @POST("api/reservations")
     suspend fun createReservation(@Body reservation: ReservationDto): Response<ReservationDto>
+
+    @POST("api/reviews")
+    suspend fun sendReview(@Body review: ReviewDto): Response<Unit>
 }

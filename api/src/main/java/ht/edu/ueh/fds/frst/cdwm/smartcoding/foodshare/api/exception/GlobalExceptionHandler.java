@@ -102,6 +102,7 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.UNAUTHORIZED)
                 .body(response);
     }
+}
 
     // Code HTTP = 400 — Erreur métier (créneau invalide, offre non modifiable…)
     @ExceptionHandler(CreneauInvalideException.class)

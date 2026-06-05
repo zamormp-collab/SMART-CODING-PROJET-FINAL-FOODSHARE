@@ -8,6 +8,7 @@ package ht.edu.ueh.fds.frst.cdwm.smartcoding.foodshare.api.repository;
 import ht.edu.ueh.fds.frst.cdwm.smartcoding.foodshare.api.entity.Utilisateur;
 import ht.edu.ueh.fds.frst.cdwm.smartcoding.foodshare.api.enums.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -20,5 +21,13 @@ public interface UtilisateurRepository extends JpaRepository<Utilisateur, Long> 
 
     boolean existsByEmail(String email);
 
+    // Lister par rôle
     List<Utilisateur> findByRole(Role role);
+
+    // Recherche par nom ou prénom (insensible à la casse)
+    @Query("SELECT u FROM Utilisateur u WHERE " +
+            "LOWER(u.nom) LIKE LOWER(CONCAT('%', :recherche, '%')) OR " +
+            "LOWER(u.prenom) LIKE LOWER(CONCAT('%', :recherche, '%')) OR " +
+            "LOWER(u.email) LIKE LOWER(CONCAT('%', :recherche, '%'))")
+    List<Utilisateur> rechercherParMotCle(String recherche);
 }

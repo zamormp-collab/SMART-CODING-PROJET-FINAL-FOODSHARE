@@ -15,6 +15,7 @@ package ht.edu.ueh.fds.frst.cdwm.smartcoding.foodshare.api.enums;
  */
 public enum Role {
     OFFREUR,
-    ETUDIANT
+    ETUDIANT,
+    ADMIN
 }
 

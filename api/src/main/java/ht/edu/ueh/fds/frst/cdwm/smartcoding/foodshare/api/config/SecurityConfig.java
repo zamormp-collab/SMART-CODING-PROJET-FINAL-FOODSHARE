@@ -83,6 +83,8 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/h2-console/**"
                         ).permitAll()
+                        // Route de lecture des utilisateurs accessibles aux administrateurs
+                        .requestMatchers(HttpMethod.GET, "/api/utilisateurs").hasRole("ADMIN")
                         // Routes de lecture des offres
                         .requestMatchers(HttpMethod.GET, "/api/offres/mes-offres").hasRole("OFFREUR")
                         // GET /api/offres — accessible à tous les utilisateurs connectés

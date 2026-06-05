@@ -85,6 +85,17 @@ public class SecurityConfig {
                         ).permitAll()
                         // Route de lecture des utilisateurs accessibles aux administrateurs
                         .requestMatchers(HttpMethod.GET, "/api/utilisateurs").hasRole("ADMIN")
+                        // Routes de lecture des offres
+                        .requestMatchers(HttpMethod.GET, "/api/offres/mes-offres").hasRole("OFFREUR")
+                        // GET /api/offres — accessible à tous les utilisateurs connectés
+                        .requestMatchers(HttpMethod.GET, "/api/offres", "/api/offres/*").hasAnyRole("OFFREUR", "ETUDIANT")
+                        // Gestion des offres — réservé aux OFFREURs
+                        .requestMatchers("/api/offres/**").hasRole("OFFREUR")
+                        // Reservations — les étudiants réservent, les offreurs suivent les retraits
+                        .requestMatchers(HttpMethod.POST, "/api/reservations/offres/*").hasRole("ETUDIANT")
+                        .requestMatchers(HttpMethod.GET, "/api/reservations/mes-reservations").hasRole("ETUDIANT")
+                        .requestMatchers(HttpMethod.GET, "/api/reservations/offres/*").hasRole("OFFREUR")
+                        .requestMatchers(HttpMethod.PATCH, "/api/reservations/**").hasRole("OFFREUR")
                         // Tout le reste nécessite une authentification
                         .anyRequest().authenticated()
                 )

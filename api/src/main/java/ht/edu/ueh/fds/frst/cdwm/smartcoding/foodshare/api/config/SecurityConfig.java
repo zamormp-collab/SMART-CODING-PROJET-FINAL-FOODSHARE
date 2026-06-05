@@ -83,12 +83,8 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/h2-console/**"
                         ).permitAll()
-                        // Routes de lecture des offres
-                        .requestMatchers(HttpMethod.GET, "/api/offres/mes-offres").hasRole("OFFREUR")
-                        // GET /api/offres — accessible à tous les utilisateurs connectés
-                        .requestMatchers(HttpMethod.GET, "/api/offres", "/api/offres/*").hasAnyRole("OFFREUR", "ETUDIANT")
-                        // Gestion des offres — réservé aux OFFREURs
-                        .requestMatchers("/api/offres/**").hasRole("OFFREUR")
+                        // Route de lecture des utilisateurs accessibles aux administrateurs
+                        .requestMatchers(HttpMethod.GET, "/api/utilisateurs").hasRole("ADMIN")
                         // Tout le reste nécessite une authentification
                         .anyRequest().authenticated()
                 )

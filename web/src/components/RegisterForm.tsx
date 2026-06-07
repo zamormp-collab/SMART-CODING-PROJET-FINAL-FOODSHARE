@@ -1,75 +1,74 @@
 import React, { useState, ChangeEvent, FormEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { authService } from '../services/authService';
+import { RegisterRequest } from '../types';
+import { useAuth } from '../Context/AuthContext';
 
-// Définition des champs requis pour le formulaire
-interface RegisterData {
-    nom: string;
-    prenom: string;
-    email: string;
-    motDePasse: string;
-    role: '';
-    address: string;
-    Telephone: string;
-}
-
-// Etat du formulaire 
 const RegisterForm: React.FC = () => {
-    const [formData, setFormData] = useState<RegisterData>({
+    const navigate = useNavigate();
+    const { loginUser } = useAuth();
+
+    const [formData, setFormData] = useState<RegisterRequest>({
         nom: '',
         prenom: '',
         email: '',
         motDePasse: '',
-        role: '',
-        address: '',
-        Telephone: '',
+        role: 'OFFREUR',
+        adresse: '',
+        telephone: '',
     });
 
-    //Champs qui sert uniquement a la validation cote client
-    const [ConfirmPassword, setConfirmePassword] = useState('');
-
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
 
-    //Gestionnaire de changement generique
     const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
-    //Soumission du formulaire d'inscription
-    const handleSubmit = (e: FormEvent) => {
+    const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
-
-        //Validation du mot de passe
-        if (formData.motDePasse !== ConfirmPassword) {
-            setError('Les mots de passe ne correspondent pas.');
-            return;
-        }
-        setIsLoading(true);
         setError(null);
 
+        if (formData.motDePasse.trim() !== confirmPassword.trim()) {
+            setError("Les mots de passe ne correspondent pas.");
+            return;
+        }
+
+        setIsLoading(true);
+
         try {
-            // Logique d'appel vers l'API Spring Boot //
-            console.log("Données d'inscription :", formData);
-        } catch {
-            setError("Erreur lors de l'inscription. Cet email est peut deja utiliser.");
+            await authService.register(formData);
+
+            await loginUser({
+                email: formData.email.toLowerCase().trim(),
+                password: formData.motDePasse,
+            });
+
+            navigate('/dashboard');
+
+        } catch (err: any) {
+            setError(err.message || "Erreur lors de l'inscription. L'adresse e-mail est peut-être déjà utilisée.");
         } finally {
-            setIsLoading(false)
+            setIsLoading(false);
         }
     };
 
-    // Classes CSS communes aux inputs (évite la répétition)
     const inputClass = "w-full border border-white/10 rounded-lg px-4 py-2 text-white outline-none focus:border-brand-amber transition-all bg-transparent";
-    const labelClass = "text-gray-400 text-[10px] uppercase font-bold ml-1";
+    //Message de Bienvenue personnaliser
+    const prenomSaisi = formData.prenom.trim();
 
     return (
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            <h2 className="text-brand-amber text-center font-bold text-xl uppercase mb-2">
-                Inscription
-            </h2>
 
-            {/* Nom  */}
+                <h2 className="text-brand-amber text-center font-bold text-xl uppercase mb-2">
+                    Inscription 
+                </h2>
+
+            {/* Nom */}
             <div className="flex flex-col gap-1">
-                <label className="text-gray-400 text-[10px] uppercase font-bold ml-1">Nom</label>
+                <label className="text-gray-400 text-[10px] uppercase font-bold ml-1">👤Nom</label>
                 <input
                     type="text"
                     name="nom"
@@ -80,9 +79,9 @@ const RegisterForm: React.FC = () => {
                 />
             </div>
 
-            {/* prenom */}
+            {/* Prénom */}
             <div className="flex flex-col gap-1">
-                <label className="text-gray-400 text-[10px] uppercase font-bold ml-1">Prenom</label>
+                <label className="text-gray-400 text-[10px] uppercase font-bold ml-1">👤Prénom</label>
                 <input
                     type="text"
                     name="prenom"
@@ -93,92 +92,96 @@ const RegisterForm: React.FC = () => {
                 />
             </div>
 
-
             {/* Email */}
             <div className="flex flex-col gap-1">
-                <label className="text-gray-400 text-[10px] uppercase font-bold ml-1">Email</label>
+                <label className="text-gray-400 text-[10px] uppercase font-bold ml-1">📧 Email</label>
                 <input
                     type="email"
                     name="email"
                     required
                     value={formData.email}
                     onChange={handleChange}
-                    placeholder=" "
                     className={inputClass}
                 />
             </div>
 
-            {/* Telephone */}
+            {/* Téléphone */}
             <div className="flex flex-col gap-1">
-                <label className="text-gray-400 text-[10px] uppercase font-bold ml-1">Telephone</label>
+                <label className="text-gray-400 text-[10px] uppercase font-bold ml-1">📱Téléphone</label>
                 <input
                     type="tel"
                     name="telephone"
-                    required
-                    value={formData.Telephone}
+                    value={formData.telephone}
                     onChange={handleChange}
-                    placeholder=" "
                     className={inputClass}
                 />
             </div>
 
             {/* Adresse */}
             <div className="flex flex-col gap-1">
-                <label className="text-gray-400 text-[10px] uppercase font-bold ml-1">Adresse</label>
+                <label className="text-gray-400 text-[10px] uppercase font-bold ml-1">📍Adresse</label>
                 <input
                     type="text"
-                    name="address"
-                    required
-                    value={formData.address}
+                    name="adresse"
+                    value={formData.adresse}
                     onChange={handleChange}
-                    placeholder=" "
                     className={inputClass}
                 />
             </div>
 
-
-            {/* Mot de Passe */}
+            {/* Mot de passe */}
             <div className="flex flex-col gap-1">
-                <label className="text-gray-400 text-[10px] uppercase font-bold ml-1">Mot de passe</label>
+                <label className="text-gray-400 text-[10px] uppercase font-bold ml-1">🔒 Mot de passe</label>
                 <input
                     type="password"
                     name="motDePasse"
                     required
+                    minLength={6}
                     value={formData.motDePasse}
                     onChange={handleChange}
-                    placeholder=" "
                     className={inputClass}
                 />
             </div>
 
-
-            {/* Role */}
+            {/* Confirmer mot de passe */}
             <div className="flex flex-col gap-1">
-                <label className="text-gray-400 text-[10px] uppercase font-bold ml-1">Role</label>
+                <label className="text-gray-400 text-[10px] uppercase font-bold ml-1"> 🔑 Confirmer votre mot de passe</label>
                 <input
-                    type="role"
-                    name="role"
+                    type="password"
                     required
-                    value={formData.role}
-                    onChange={handleChange}
-                    placeholder=" "
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
                     className={inputClass}
+                />
+            </div>
+
+            {/* Rôle (lecture seule) */}
+            <div className="flex flex-col gap-1">
+                <label className="text-gray-400 text-[10px] uppercase font-bold ml-1">🏷️ Rôle</label>
+                <input
+                    type="text"
+                    name="role"
+                    disabled
+                    value={formData.role}
+                    className={`${inputClass} opacity-50 cursor-not-allowed`}
                 />
             </div>
 
             {/* Message d'erreur */}
             {error && (
-                <p className="text-red-400 text-xs text-center">{error}</p>
+                <p className="text-red-400 text-xs text-center font-semibold bg-red-500/10 py-2 rounded-lg border border-red-500/20">
+                   ⚠️ {error}
+                </p>
             )}
 
-            {/*  Bouton soumission  */}
+            {/* Bouton soumission */}
             <button
                 type="submit"
                 disabled={isLoading}
-                className="mt-4 bg-brand-amber hover:bg-amber-500 text-brand-dark font-bold py-3 rounded-lg uppercase tracking-tighter transition-transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed" >
+                className="mt-4 bg-brand-amber hover:bg-amber-500 text-brand-dark font-bold py-3 rounded-lg uppercase tracking-tighter transition-transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
                 {isLoading ? 'Création en cours...' : 'Créer un compte'}
             </button>
-
         </form>
     );
 };

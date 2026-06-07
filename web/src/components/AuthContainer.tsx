@@ -11,9 +11,7 @@ const AuthContainer: React.FC = () => {
 
                 {/* Section Logo et Titres */}
                 <div className="mb-6 flex flex-col items-center text-center">
-                    {/* Le conteneur blanc arrondi  */}
                     <div className="bg-white rounded-3xl mb-3 shadow-md w-28 h-28 flex items-center justify-center overflow-hidden p-2">
-                        {/* utilisation de la variable importée dans la balise img */}
                         <img
                             src="logo-foodshare.png"
                             alt="FoodShare Logo"
@@ -34,7 +32,7 @@ const AuthContainer: React.FC = () => {
                     {isLogin ? <LoginForm /> : <RegisterForm />}
                 </div>
 
-            
+
                 <button
                     onClick={() => setIsLogin(!isLogin)}
                     className="mt-6 text-gray-400 text-xs hover:text-brand-amber transition-colors font-medium"

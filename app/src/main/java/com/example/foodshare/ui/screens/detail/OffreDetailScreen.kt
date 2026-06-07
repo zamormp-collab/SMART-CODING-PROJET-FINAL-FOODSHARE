@@ -54,7 +54,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
+import android.widget.Toast
 import coil.compose.SubcomposeAsyncImage
+import com.example.foodshare.data.local.SessionManager
 import com.example.foodshare.data.remote.dto.OffreDto
 import com.example.foodshare.ui.theme.BrownPrimary
 import com.example.foodshare.ui.theme.DarkSurface
@@ -64,6 +67,7 @@ import com.example.foodshare.ui.theme.WhiteText
 import com.example.foodshare.viewmodel.OffreDetailState
 import com.example.foodshare.viewmodel.OffreViewModel
 import com.example.foodshare.viewmodel.OffreViewModelFactory
+import com.example.foodshare.viewmodel.ReservationActionState
 import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
@@ -71,11 +75,28 @@ fun OffreDetailScreen(
     offreId: String?,
     onBackClick: () -> Unit = {}
 ) {
-    val viewModel: OffreViewModel = viewModel(factory = remember { OffreViewModelFactory() })
+    val context = LocalContext.current
+    val sessionManager = remember(context) { SessionManager(context) }
+    val viewModel: OffreViewModel = viewModel(factory = remember(sessionManager) { OffreViewModelFactory(sessionManager) })
     val uiState = viewModel.uiState
+    val reservationState = viewModel.reservationState
 
     LaunchedEffect(offreId) {
         viewModel.loadOffer(offreId)
+    }
+
+    LaunchedEffect(reservationState) {
+        when (reservationState) {
+            is ReservationActionState.Success -> {
+                Toast.makeText(context, "Offre réservée avec succès !", Toast.LENGTH_SHORT).show()
+                viewModel.resetReservationState()
+            }
+            is ReservationActionState.Error -> {
+                Toast.makeText(context, reservationState.message, Toast.LENGTH_LONG).show()
+                viewModel.resetReservationState()
+            }
+            else -> {}
+        }
     }
 
     val loading = uiState is OffreDetailState.Loading
@@ -128,15 +149,30 @@ fun OffreDetailScreen(
                             OfferBanner(imageUrl = current.imageUrl, title = current.title)
                             OfferMainCard(offer = current)
                             OfferDescriptionCard(description = current.description)
+                            
+                            val isReserving = reservationState is ReservationActionState.Loading
+
                             Button(
-                                onClick = { /* reserve later */ },
-                                colors = ButtonDefaults.buttonColors(containerColor = OrangeAccent),
+                                onClick = { viewModel.reserveOffer(current.id) },
+                                enabled = !isReserving,
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = OrangeAccent,
+                                    disabledContainerColor = Color.Gray
+                                ),
                                 shape = RoundedCornerShape(22.dp),
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Icon(Icons.Filled.AddShoppingCart, contentDescription = null, tint = WhiteText)
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(text = "Réserver maintenant", color = WhiteText, fontWeight = FontWeight.Bold)
+                                if (isReserving) {
+                                    CircularProgressIndicator(color = WhiteText, modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                                } else {
+                                    Icon(Icons.Filled.AddShoppingCart, contentDescription = null, tint = WhiteText)
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = "Réserver maintenant",
+                                        color = WhiteText, 
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
                             }
                         }
                     }
@@ -319,12 +355,13 @@ private fun OfferMainCard(offer: OffreDto) {
 @Composable
 private fun OfferBadgeRow(offer: OffreDto) {
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+        val currentQty = offer.quantity ?: 0
         BadgeChip(
-            text = if ((offer.quantity ?: 0) > 0) "Disponible" else "Épuisé",
-            background = Color(0x1A2E7D32),
-            textColor = Color(0xFF2E7D32)
+            text = if (currentQty > 0) "Disponible" else "Plus de stock",
+            background = if (currentQty > 0) Color(0x1A2E7D32) else Color(0x1AD32F2F),
+            textColor = if (currentQty > 0) Color(0xFF2E7D32) else Color(0xFFD32F2F)
         )
-        if ((offer.quantity ?: 0) in 1..3) {
+        if (currentQty in 1..3) {
             BadgeChip(
                 text = "Quantité limitée",
                 background = Color(0x1AFFA000),
@@ -458,9 +495,9 @@ private fun OfferErrorState(message: String) {
 }
 
 private fun quantityLabel(quantity: Int?): String = when {
-    quantity == null -> "-"
-    quantity <= 1 -> "$quantity portion"
-    else -> "$quantity portions"
+    quantity == null || quantity <= 0 -> "Plus de stock"
+    quantity == 1 -> "1 portion disponible"
+    else -> "$quantity portions disponibles"
 }
 
 private fun isExpirationClose(expirationDate: String?): Boolean {

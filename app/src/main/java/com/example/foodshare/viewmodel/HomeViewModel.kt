@@ -7,6 +7,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.foodshare.data.repository.OffreRepository
 import com.example.foodshare.data.repository.ReservationRepository
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 class HomeViewModel(
@@ -17,29 +20,49 @@ class HomeViewModel(
     var uiState by mutableStateOf<HomeState>(HomeState.Idle)
         private set
 
-    fun loadHomeData(userId: String? = null) {
+    private var refreshJob: Job? = null
+
+    fun loadHomeData(userId: String? = null, silent: Boolean = false) {
         viewModelScope.launch {
-            uiState = HomeState.Loading
+            if (!silent) {
+                uiState = HomeState.Loading
+            }
 
             val offersResult = offreRepository.fetchOffers()
             val reservationsResult = reservationRepository.fetchUserReservations(userId)
 
-            uiState = when {
-                offersResult.isSuccess && reservationsResult.isSuccess -> {
-                    HomeState.Success(
-                        offers = offersResult.getOrDefault(emptyList()),
-                        reservations = reservationsResult.getOrDefault(emptyList())
-                    )
-                }
-                else -> {
-                    HomeState.Error(
-                        offersResult.exceptionOrNull()?.message
-                            ?: reservationsResult.exceptionOrNull()?.message
-                            ?: "Erreur lors du chargement de l'accueil"
-                    )
-                }
+            if (offersResult.isSuccess) {
+                uiState = HomeState.Success(
+                    offers = offersResult.getOrDefault(emptyList()),
+                    reservations = reservationsResult.getOrDefault(emptyList())
+                )
+            } else if (!silent) {
+                uiState = HomeState.Error(
+                    offersResult.exceptionOrNull()?.message ?: "Erreur lors du chargement des offres"
+                )
             }
         }
+    }
+
+    fun startAutoRefresh(userId: String? = null) {
+        if (refreshJob != null) return
+        
+        refreshJob = viewModelScope.launch {
+            while (isActive) {
+                loadHomeData(userId, silent = true)
+                delay(1000)
+            }
+        }
+    }
+
+    fun stopAutoRefresh() {
+        refreshJob?.cancel()
+        refreshJob = null
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        stopAutoRefresh()
     }
 }
 

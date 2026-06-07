@@ -143,7 +143,15 @@ private data class HomeOfferCardUi(
 private fun OffreDto.toCardUi(): HomeOfferCardUi {
     val titleText = title?.takeIf { it.isNotBlank() } ?: "Offre"
     val descriptionText = description?.takeIf { it.isNotBlank() } ?: "Aucune description disponible"
-    val badgeText = quantity?.let { "$it portion(s)" } ?: "Disponible"
+    
+    // Correction de l'affichage de la quantité
+    val currentQty = quantity ?: 0
+    val badgeText = when {
+        currentQty <= 0 -> "Plus de stock"
+        currentQty == 1 -> "1 portion"
+        else -> "$currentQty portions"
+    }
+
     val image = imageUrl?.takeIf { it.isNotBlank() }
     val icon = when (titleText.lowercase()) {
         "fish fillet" -> Icons.Default.FavoriteBorder

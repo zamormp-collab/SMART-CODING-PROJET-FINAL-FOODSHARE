@@ -36,13 +36,15 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PersonOutline
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.WarningAmber
-import androidx.compose.material.icons.filled.List
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -51,6 +53,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -126,6 +129,51 @@ fun ProfileScreen(
     val errorMessage = (userUiState as? UserState.Error)?.message
         ?: (cachedUserState as? UserState.Error)?.message
 
+    var showInfoDialog by remember { mutableStateOf(false) }
+    var showLogoutDialog by remember { mutableStateOf(false) }
+
+    if (showLogoutDialog) {
+        AlertDialog(
+            onDismissRequest = { showLogoutDialog = false },
+            title = { Text("Déconnexion") },
+            text = { Text("Êtes-vous sûr de vouloir vous déconnecter ?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showLogoutDialog = false
+                    userViewModel.logout()
+                    onBackClick?.invoke()
+                }) {
+                    Text("Oui", color = OrangeAccent)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showLogoutDialog = false }) {
+                    Text("Annuler", color = GrayText)
+                }
+            }
+        )
+    }
+
+    if (showInfoDialog) {
+        AlertDialog(
+            onDismissRequest = { showInfoDialog = false },
+            title = { Text("Informations") },
+            text = { 
+                Text(
+                    "FoodShare est une application de partage de nourriture. " +
+                    "Elle permet aux utilisateurs de proposer des surplus alimentaires et de réserver des offres " +
+                    "proches de chez eux afin de lutter contre le gaspillage alimentaire.\n\n" +
+                    "Version 1.0.0"
+                ) 
+            },
+            confirmButton = {
+                TextButton(onClick = { showInfoDialog = false }) {
+                    Text("Fermer", color = OrangeAccent)
+                }
+            }
+        )
+    }
+
     ProfileScreenContent(
         user = user,
         avatarUri = avatarUri,
@@ -133,6 +181,8 @@ fun ProfileScreen(
         errorMessage = errorMessage,
         onBackClick = onBackClick,
         onReservationsClick = onReservationsClick,
+        onLogoutClick = { showLogoutDialog = true },
+        onInfoClick = { showInfoDialog = true },
         onSave = { updatedUser -> updatedUser?.let { userViewModel.saveUser(it) } },
         onPickImage = { pickImageLauncher.launch("image/*") },
         context = context
@@ -147,6 +197,8 @@ private fun ProfileScreenContent(
     errorMessage: String?,
     onBackClick: (() -> Unit)?,
     onReservationsClick: (() -> Unit)?,
+    onLogoutClick: () -> Unit,
+    onInfoClick: () -> Unit,
     onSave: (UserDto?) -> Unit,
     onPickImage: () -> Unit,
     context: Context
@@ -239,7 +291,7 @@ private fun ProfileScreenContent(
                             ProfileMenuItemCard(
                                 icon = Icons.Default.PersonOutline,
                                 label = "Informations du compte",
-                                value = "Gérer les paramètres"
+                                value = "${currentUser.prenom ?: ""} ${currentUser.nom ?: ""} • ${currentUser.email} • ${currentUser.role ?: "Utilisateur"}"
                             )
 
                             ProfileMenuItemCard(
@@ -258,19 +310,27 @@ private fun ProfileScreenContent(
                             ProfileMenuItemCard(
                                 icon = Icons.Default.Security,
                                 label = "Sécurité",
-                                value = "Gérer la sécurité du compte"
+                                value = "Protégez votre compte et gérez votre mot de passe"
                             )
 
                             ProfileMenuItemCard(
                                 icon = Icons.Default.Lock,
                                 label = "Conditions d'utilisation",
-                                value = "Lire les conditions"
+                                value = "Consultez nos règles de communauté et politiques"
+                            )
+
+                            ProfileMenuItemCard(
+                                icon = Icons.Default.Info,
+                                label = "Informations sur l'utilisation",
+                                value = "Comment fonctionne FoodShare",
+                                onClick = onInfoClick
                             )
 
                             ProfileMenuItemCard(
                                 icon = Icons.Default.Logout,
                                 label = "Déconnexion",
-                                value = "Quitter l'application"
+                                value = "Quitter l'application",
+                                onClick = onLogoutClick
                             )
 
                             Spacer(modifier = Modifier.height(8.dp))
@@ -713,6 +773,8 @@ fun ProfileScreenPreview() {
             errorMessage = null,
             onBackClick = { },
             onReservationsClick = { },
+            onLogoutClick = { },
+            onInfoClick = { },
             onSave = { },
             onPickImage = { },
             context = LocalContext.current

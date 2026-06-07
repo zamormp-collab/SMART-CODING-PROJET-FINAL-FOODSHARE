@@ -49,4 +49,9 @@ class UserViewModel(private val repository: UserRepository, private val sessionM
             UserState.Error(e.message ?: "Parse error")
         }
     }
+
+    fun logout() {
+        sessionManager.clearSession()
+        uiState = UserState.Idle
+    }
 }

@@ -66,7 +66,7 @@ fun HomeScreen(
     val context = LocalContext.current
     val sessionManager = remember(context) { SessionManager(context) }
     val userViewModel: UserViewModel = viewModel(factory = remember(sessionManager) { UserViewModelFactory(sessionManager) })
-    val homeViewModel: HomeViewModel = viewModel(factory = remember { HomeViewModelFactory() })
+    val homeViewModel: HomeViewModel = viewModel(factory = remember(sessionManager) { HomeViewModelFactory(sessionManager) })
 
     val cachedUserState = remember { userViewModel.getCachedUser() }
     val userUiState = userViewModel.uiState
@@ -76,12 +76,15 @@ fun HomeScreen(
         if (cachedUserState !is UserState.Success && userUiState is UserState.Idle) {
             userViewModel.loadCurrentUser()
         }
+        
+        val userId = (cachedUserState as? UserState.Success)?.user?.id
+            ?: (userUiState as? UserState.Success)?.user?.id
+            
         if (homeUiState is HomeState.Idle) {
-            homeViewModel.loadHomeData(
-                userId = (cachedUserState as? UserState.Success)?.user?.id
-                    ?: (userUiState as? UserState.Success)?.user?.id
-            )
+            homeViewModel.loadHomeData(userId)
         }
+        
+        homeViewModel.startAutoRefresh(userId)
     }
 
     val user: UserDto? = when {
@@ -199,7 +202,10 @@ private fun HomeScreenContent(
                     else -> filteredOffers.forEach { offer ->
                         OffreCard(
                             offre = offer,
-                            onClick = { offer.id?.let(onOfferClick) },
+                            onClick = { 
+                                // On s'assure que l'ID n'est pas nul avant de naviguer
+                                offer.id?.let { id -> onOfferClick(id) }
+                            },
                             modifier = Modifier.fillMaxWidth()
                         )
                     }

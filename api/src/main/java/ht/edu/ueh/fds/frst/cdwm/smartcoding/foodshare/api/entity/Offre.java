@@ -84,6 +84,12 @@ public class Offre {
     private StatutOffre statutOffre = StatutOffre.ACTIVE;
 
     /**
+     * URL ou chemin de l'image de l'offre.
+     */
+    @Column(length = 500)
+    private String imageUrl;
+
+    /**
      * Relation vers l'offreur propriétaire de l'offre
      * FetchType.LAZY = l'offreur n'est chargé que si on y accède
      */

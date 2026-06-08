@@ -60,6 +60,7 @@ public class OffreService implements IOffreService {
                 .debutRetrait(request.getDebutRetrait())
                 .finRetrait(request.getFinRetrait())
                 .lieu(request.getLieu())
+                .imageUrl(request.getImageUrl())
                 .statutOffre(StatutOffre.ACTIVE)
                 .offreur(offreur)
                 .build();
@@ -131,6 +132,7 @@ public class OffreService implements IOffreService {
         offre.setDebutRetrait(request.getDebutRetrait());
         offre.setFinRetrait(request.getFinRetrait());
         offre.setLieu(request.getLieu());
+        offre.setImageUrl(request.getImageUrl());
 
         return OffreResponse.from(offreRepository.save(offre));
     }

@@ -30,6 +30,7 @@ public class OffreResponse {
     private LocalDateTime debutRetrait;
     private LocalDateTime finRetrait;
     private String lieu;
+    private String imageUrl;
     private StatutOffre statutOffre;
 
     // Informations de l'offreur (sans mot de passe ni données sensibles)
@@ -55,6 +56,7 @@ public class OffreResponse {
                 .debutRetrait(offre.getDebutRetrait())
                 .finRetrait(offre.getFinRetrait())
                 .lieu(offre.getLieu())
+                .imageUrl(offre.getImageUrl())
                 .statutOffre(offre.getStatutOffre())
                 .offreurId(offre.getOffreur().getId())
                 .offreurNom(offre.getOffreur().getNom())

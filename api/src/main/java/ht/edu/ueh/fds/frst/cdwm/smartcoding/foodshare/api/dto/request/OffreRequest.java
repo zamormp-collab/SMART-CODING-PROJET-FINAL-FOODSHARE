@@ -42,4 +42,7 @@ public class OffreRequest {
     @NotBlank(message = "Le lieu est obligatoire")
     @Size(max = 300, message = "Le lieu ne peut pas dépasser 300 caractères")
     private String lieu;
+
+    @Size(max = 500, message = "L'URL de l'image ne peut pas dépasser 500 caractères")
+    private String imageUrl;
 }

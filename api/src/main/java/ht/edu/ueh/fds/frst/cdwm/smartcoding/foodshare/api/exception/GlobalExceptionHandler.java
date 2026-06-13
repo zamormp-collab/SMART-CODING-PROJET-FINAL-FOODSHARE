@@ -102,11 +102,10 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.UNAUTHORIZED)
                 .body(response);
     }
-}
 
     // Code HTTP = 400 — Erreur métier (créneau invalide, offre non modifiable…)
     @ExceptionHandler(CreneauInvalideException.class)
-    public ResponseEntity<Map<String, Object>> handleCreneauInvalide(
+    public  ResponseEntity<Map<String, Object>> handleCreneauInvalide(
             CreneauInvalideException ex) {
 
         Map<String, Object> response = new HashMap<>();
